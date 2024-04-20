@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >=0.8.11 <0.9.0;
 
+import {IWormholeReciever} from "@synthetixio/utils/core-modules/contracts/modules/CrossChainModule.sol";
 import {SetUtil} from "@synthetixio/core-contracts/contracts/utils/SetUtil.sol";
 import {AccessError} from "@synthetixio/core-contracts/contracts/errors/AccessError.sol";
 
@@ -12,13 +13,14 @@ import "../interfaces/external/ICcipRouterClient.sol";
 /**
  * @title System wide configuration for anything related to cross-chain
  */
-library CrossChain {
+library CrossChain is IWormholeReciever {
     using SetUtil for SetUtil.UintSet;
     using SafeCastU256 for uint256;
 
     event ProcessedCcipMessage(bytes payload, bytes result);
 
     error NotCcipRouter(address);
+    error NotWormholeRelayer(address);
     error UnsupportedNetwork(uint64);
     error InvalidNetwork(uint64);
     error InsufficientCcipFee(uint256 requiredAmount, uint256 availableAmount);
@@ -30,8 +32,53 @@ library CrossChain {
     struct Data {
         ICcipRouterClient ccipRouter;
         SetUtil.UintSet supportedNetworks;
+        address wormholeRelayer;
         mapping(uint64 => uint64) ccipChainIdToSelector;
         mapping(uint64 => uint64) ccipSelectorToChainId;
+    }
+
+    /**
+     * @notice Returns the cost (in wei) of a greeting
+     */
+    function quoteCrossChainMessage(uint16 targetChain) public view returns (uint256 cost) {
+        // Cost of requesting a message to be sent to
+        // chain 'targetChain' with a gasLimit of '50000'
+        (cost, ) = self.wormholeRelayer.quoteEVMDeliveryPrice(targetChain, 0, 50000);
+    }
+
+    /**
+     * @inheritdoc ICrossChainModule
+     */
+    function sendCrossChainMessage(
+        uint16 targetChain,
+        address targetAddress,
+        bytes memory data
+    ) public payable {
+        bytes memory payload = abi.encode(data, ERC2771Context._msgSender());
+        uint256 cost = quoteCrossChainMessage(targetChain);
+        require(msg.value == cost, "Incorrect payment");
+        self.wormholeRelayer.sendPayloadToEvm{value: cost}(
+            targetChain,
+            targetAddress,
+            payload,
+            0, // no receiver value needed
+            50000
+        );
+    }
+
+    function receiveWormholeMessages(
+        bytes memory payload,
+        bytes[] memory additionalVaas,
+        bytes32 sourceAddress,
+        uint16 sourceChain,
+        bytes32 deliveryHash
+    ) external payable {
+        if (
+            address(self.wormholeRelayer) == address(0) ||
+            ERC2771Context._msgSender() != address(self.wormholeRelayer)
+        ) {
+            revert NotWormholeRelayer(ERC2771Context._msgSender());
+        }
     }
 
     function load() internal pure returns (Data storage crossChain) {

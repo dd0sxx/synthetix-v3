@@ -5,6 +5,8 @@ import "@synthetixio/core-contracts/contracts/ownership/OwnableStorage.sol";
 import "@synthetixio/core-contracts/contracts/errors/ParameterError.sol";
 import "@synthetixio/core-contracts/contracts/utils/SafeCast.sol";
 
+import {ERC2771Context} from "@synthetixio/core-contracts/contracts/utils/ERC2771Context.sol";
+
 import "../interfaces/IAssociatedSystemsModule.sol";
 import "../interfaces/external/IAny2EVMMessageReceiver.sol";
 import "../interfaces/ICrossChainModule.sol";
