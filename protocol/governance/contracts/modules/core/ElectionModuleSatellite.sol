@@ -103,7 +103,7 @@ contract ElectionModuleSatellite is
     function castWithWormhole(
         address[] calldata candidates,
         uint256[] calldata amounts
-    ) public payable override {
+    ) public payable {
         Council.onlyInPeriod(Epoch.ElectionPeriod.Vote);
 
         address sender = ERC2771Context._msgSender();
