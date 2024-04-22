@@ -38,50 +38,61 @@ library CrossChain {
         mapping(uint64 => uint64) ccipSelectorToChainId;
     }
 
-    // /**
-    //  * @notice Returns the cost (in wei) of a greeting
-    //  */
-    // function quoteCrossChainMessage(
-    //     Data storage self,
-    //     uint16 targetChain
-    // ) public view returns (uint256 cost) {
-    //     // Cost of requesting a message to be sent to
-    //     // chain 'targetChain' with a gasLimit of '50000'
-    //     (cost, ) = self.wormholeRelayer.quoteEVMDeliveryPrice(targetChain, 0, 50000);
-    // }
-
     function sendCrossChainMessage(
         Data storage self,
-        uint16 targetChain,
-        address targetAddress,
         bytes memory data
-    ) public {
-        bytes memory payload = abi.encode(data, ERC2771Context._msgSender());
-        // uint256 cost = quoteCrossChainMessage(targetChain);
+    ) public payable returns (uint64 messageSequence) {
         uint256 cost = self.wormholeRelayer.messageFee();
         require(msg.value == cost, "Incorrect payment");
+
+        bytes memory payload = abi.encode(data, ERC2771Context._msgSender());
+
         self.wormholeRelayer.publishMessage{value: cost}(
             self.nonce,
             payload,
-            1 // consistencyLevel
+            1 // consistencyLevel or wormholeFinality
         );
         self.nonce++;
     }
 
-    function receiveWormholeMessages(
-        Data storage self,
-        bytes memory payload,
-        bytes[] memory additionalVaas,
-        bytes32 sourceAddress,
-        uint16 sourceChain,
-        bytes32 deliveryHash
-    ) external {
-        if (
-            address(self.wormholeRelayer) == address(0) ||
-            ERC2771Context._msgSender() != address(self.wormholeRelayer)
-        ) {
-            revert NotWormholeRelayer(ERC2771Context._msgSender());
-        }
+    function receiveWormholeMessages(Data storage self, bytes memory encodedMessage) external {
+        (IWormhole.VM memory wormholeMessage, bool valid, string memory reason) = self
+            .wormholeRelayer
+            .parseAndVerifyVM(encodedMessage);
+
+        // confirm that the Wormhole core contract verified the message
+        require(valid, reason);
+
+        // verify that this message was emitted by a registered emitter
+        require(verifyEmitter(wormholeMessage), "unknown emitter");
+
+        // TODO: what are we actually doing with the message?
+    }
+
+    /**
+     * @notice Registers foreign emitters (satelite contracts) with this contract
+     * @dev Only the deployer (owner) can invoke this method
+     * @param emitterChainId Wormhole chainId of the contract being registered
+     * See https://book.wormhole.com/reference/contracts.html for more information.
+     * @param emitterAddress 32-byte address of the contract being registered. For EVM
+     * contracts the first 12 bytes should be zeros.
+     */
+    function registerEmitter(uint16 emitterChainId, bytes32 emitterAddress) public onlyOwner {
+        // sanity check the emitterChainId and emitterAddress input values
+        require(
+            emitterChainId != 0 && emitterChainId != chainId(),
+            "emitterChainId cannot equal 0 or this chainId"
+        );
+        require(emitterAddress != bytes32(0), "emitterAddress cannot equal bytes32(0)");
+
+        // update the registeredEmitters state variable
+        setEmitter(emitterChainId, emitterAddress);
+    }
+
+    function verifyEmitter(IWormhole.VM memory vm) internal view returns (bool) {
+        // Verify that the sender of the Wormhole message is a trusted
+        // HelloWorld contract.
+        return getRegisteredEmitter(vm.emitterChainId) == vm.emitterAddress;
     }
 
     function load() internal pure returns (Data storage crossChain) {

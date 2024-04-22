@@ -13,7 +13,7 @@ import {
   } from "../../helpers/cross-chain-consts";
 
 
-describe("Sends Crosschain Message", () => {
+describe.only("Sends Crosschain Message", () => {
     const { c, getSigners, getProvider, snapshotCheckpoint } = bootstrap();
 
     let owner: ethers.Signer;
