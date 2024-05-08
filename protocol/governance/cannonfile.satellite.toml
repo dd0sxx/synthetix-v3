@@ -18,6 +18,9 @@ defaultValue = "0"
 [setting.initial_voting_period_start_date]
 defaultValue = "0"
 
+[setting.wormhole_router]
+defaultValue = "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a"
+
 [setting.initial_epoch_end_date]
 defaultValue = "0"
 
@@ -58,13 +61,14 @@ factory.GovernanceProxy.highlight = true
 
 [invoke.init_election_module]
 target = ["GovernanceProxy"]
-func = "initElectionModuleSatellite(uint256,uint64,uint64,uint64,uint64,address[])"
+func = "initElectionModuleSatellite(uint256,uint64,uint64,uint64,uint64,address,address[])"
 args = [
     "<%= settings.initial_epoch_index %>",
     "<%= settings.initial_epoch_start_date %>",
     "<%= settings.initial_nomination_period_start_date %>",
     "<%= settings.initial_voting_period_start_date %>",
     "<%= settings.initial_epoch_end_date %>",
+    "<%= settings.wormhole_router %>",
     ["<%= settings.initial_council_member %>"],
 ]
 from = "<%= settings.owner %>"

@@ -107,6 +107,7 @@ before(`setup integration chains`, async function () {
     initial_voting_period_start_date: schedule.votingPeriodStartDate,
     initial_epoch_end_date: schedule.endDate,
     initial_council_member: councilMembers,
+    wormhole_router: WormholeRelayers.mothership,
   };
 
   const [satellite1, satellite2] = await Promise.all([
