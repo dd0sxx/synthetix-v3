@@ -37,12 +37,18 @@ contract WormholeElectionModule is
 
     uint8 private constant _MAX_BALLOT_SIZE = 1;
 
+    event MessageRecieved(string indexed message);
+
     /**
      * @dev Do not allow to initialize using the Satellite's function, this
      *     will be taken care by initOrUpdateElectionSettings.
      */
     function initElectionModuleSatellite() external payable {
         revert NotImplemented();
+    }
+
+    function emitCrossChainMessage(string memory message) internal {
+        emit MessageRecieved(message);
     }
 
     function initOrUpdateElectionSettings(

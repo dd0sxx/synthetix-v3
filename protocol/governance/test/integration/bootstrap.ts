@@ -21,6 +21,12 @@ export enum ChainSelector {
   satellite2 = '14767482510784806043',
 }
 
+export enum WormholeRelayers {
+  mothership = '0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a', //sepolia
+  satellite1 = '0x01A957A525a5b7A72808bA9D10c389674E459891', //optimistic-goerli
+  satellite2 = '0xA3cF45939bD6260bcFe3D66bc73d60f19e49a8BB', //avalanche-fuji
+}
+
 export interface SignerOnChains {
   mothership: ethers.Signer;
   satellite1: ethers.Signer;

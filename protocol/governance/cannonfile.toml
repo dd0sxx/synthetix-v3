@@ -7,7 +7,7 @@ include = ["./tomls/proxy-base.toml", "./tomls/council-token.toml"]
 defaultValue = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 
 [setting.wormhole_router]
-defaultValue = "0x27428DD2d3DD32A4D7f7C497eAaa23130d894911"
+defaultValue = "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a"
 
 [setting.minimum_active_members]
 defaultValue = "1"
@@ -27,11 +27,14 @@ defaultValue = "15" # days
 [contract.AssociatedSystemsModule]
 artifact = "contracts/modules/core/AssociatedSystemsModule.sol:AssociatedSystemsModule"
 
+[contract.CrossChainModule]
+artifact = "contracts/modules/core/CrossChainModule.sol:CrossChainModule"
+
 [contract.ElectionInspectorModule]
 artifact = "contracts/modules/core/ElectionInspectorModule.sol:ElectionInspectorModule"
 
-[contract.WormholeElectionModule]
-artifact = "contracts/modules/core/WormholeElectionModule.sol:WormholeElectionModule"
+[contract.ElectionModule]
+artifact = "contracts/modules/core/ElectionModule.sol:ElectionModule"
 
 [contract.SnapshotVotePowerModule]
 artifact = "contracts/modules/core/SnapshotVotePowerModule.sol:SnapshotVotePowerModule"
@@ -42,8 +45,9 @@ artifact = "contracts/modules/core/CcipReceiverModule.sol:CcipReceiverModule"
 [router.CoreRouter]
 contracts = [
     "AssociatedSystemsModule",
+    "CrossChainModule",
     "ElectionInspectorModule",
-    "WormholeElectionModule",
+    "ElectionModule",
     "SnapshotVotePowerModule",
     "InitialModuleBundle",
     "CcipReceiverModule",
