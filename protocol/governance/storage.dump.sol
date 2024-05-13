@@ -210,14 +210,10 @@ library Initialized {
 // @custom:artifact @synthetixio/core-modules/contracts/storage/WormholeCrossChain.sol:WormholeCrossChain
 library WormholeCrossChain {
     bytes32 private constant _SLOT_WORMHOLE_CROSS_CHAIN = keccak256(abi.encode("io.synthetix.core-modules.WormholeCrossChain"));
-    struct SampleMessage {
-        address recipient;
-        string message;
-    }
     struct Data {
         address wormhole;
         uint32 nonce;
-        mapping(uint16 => bytes32) registeredContracts;
+        mapping(uint16 => bytes32) registeredEmitters;
         mapping(bytes32 => bool) hasProcessedMessage;
     }
     function load() internal pure returns (Data storage crossChain) {
