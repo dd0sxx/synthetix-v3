@@ -16,21 +16,28 @@ contract WormholeCrossChainModule is IWormholeReceiver {
         string message;
     }
 
-    function sendMessage(IWormhole wormhole, bytes memory fullMessage) public payable {
+    function sendMessage(
+        IWormhole wormhole,
+        bytes memory fullMessage
+    ) public payable returns (uint64 sequence) {
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        wormhole.publishMessage{value: wormhole.messageFee()}(wh.nonce, fullMessage, 200);
+        sequence = wormhole.publishMessage{value: wormhole.messageFee()}(
+            wh.nonce,
+            fullMessage,
+            200
+        );
     }
 
     function registerEmitter(uint16 chainId, bytes32 emitterAddress) public {
         // require(msg.sender == owner);
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        wh.registeredContracts[chainId] = emitterAddress;
+        wh.registeredEmitters[chainId] = emitterAddress;
     }
 
     function receiveEncodedMsg(
         bytes memory encodedMsg,
-        bytes[] memory additionalVaas, // additionalVaas
-        bytes32 sender, // address that called 'sendPayloadToEvm' (HelloWormhole contract address)
+        bytes[] memory additionalVaas,
+        bytes32 sender,
         uint16 sourceChain,
         bytes32 deliveryId
     ) public payable override {
@@ -48,7 +55,7 @@ contract WormholeCrossChainModule is IWormholeReceiver {
 
         //2. Check if the Emitter Chain contract is registered
         require(
-            wh.registeredContracts[vm.emitterChainId] == vm.emitterAddress,
+            wh.registeredEmitters[vm.emitterChainId] == vm.emitterAddress,
             "Invalid Emitter Address!"
         );
 
