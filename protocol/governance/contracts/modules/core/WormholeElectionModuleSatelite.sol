@@ -9,7 +9,9 @@ import {InitializableMixin} from "@synthetixio/core-contracts/contracts/initiali
 import {ERC2771Context} from "@synthetixio/core-contracts/contracts/utils/ERC2771Context.sol";
 import {IElectionModule} from "../../interfaces/IElectionModule.sol";
 import {IElectionModuleSatellite} from "../../interfaces/IElectionModuleSatellite.sol";
+import {IDeliveryProvider} from "@synthetixio/core-modules/contracts/interfaces/IDeliveryProvider.sol";
 import {IWormhole} from "@synthetixio/core-modules/contracts/interfaces/IWormhole.sol";
+import {IWormholeRelayer} from "@synthetixio/core-modules/contracts/interfaces/IWormholeRelayer.sol";
 import {ElectionCredentials} from "../../submodules/election/ElectionCredentials.sol";
 import {Ballot} from "../../storage/Ballot.sol";
 import {CouncilMembers} from "../../storage/CouncilMembers.sol";
@@ -29,6 +31,8 @@ contract WormholeElectionModuleSatellite is
     using Epoch for Epoch.Data;
     using SetUtil for SetUtil.AddressSet;
 
+    uint256 private constant _CROSSCHAIN_GAS_LIMIT = 100000;
+
     /**
      * @dev Utility method for initializing a new Satellite chain
      */
@@ -38,7 +42,9 @@ contract WormholeElectionModuleSatellite is
         uint64 nominationPeriodStartDate,
         uint64 votingPeriodStartDate,
         uint64 epochEndDate,
-        IWormhole wormholeRouter,
+        IDeliveryProvider wormholeDeliveryProvider,
+        IWormhole wormholeCore,
+        IWormholeRelayer wormholeRelayer,
         address[] calldata councilMembers
     ) external virtual {
         OwnableStorage.onlyOwner();
@@ -52,9 +58,9 @@ contract WormholeElectionModuleSatellite is
 
         council.initialized = true;
 
-        if (address(wh.wormhole) == address(0)) {
-            wh.wormhole = wormholeRouter;
-        }
+        wh.wormholeCore = wormholeCore;
+        wh.wormholeRelayer = wormholeRelayer;
+        wh.wormholeDeliveryProvider = wormholeDeliveryProvider;
 
         _setupEpoch(
             epochIndex,
@@ -75,6 +81,9 @@ contract WormholeElectionModuleSatellite is
     }
 
     function cast(
+        uint16 targetChain,
+        address targetAddress,
+        uint256 receiverValue,
         address[] calldata candidates,
         uint256[] calldata amounts
     ) public payable override {
@@ -92,8 +101,9 @@ contract WormholeElectionModuleSatellite is
         }
 
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        sendMessage(
-            wh.wormhole,
+        transmit(
+            targetChain,
+            targetAddress,
             abi.encodeWithSelector(
                 IElectionModule._recvCast.selector,
                 currentEpoch,
@@ -102,7 +112,9 @@ contract WormholeElectionModuleSatellite is
                 block.chainid,
                 candidates,
                 amounts
-            )
+            ),
+            receiverValue,
+            _CROSSCHAIN_GAS_LIMIT
         );
     }
 
@@ -114,7 +126,7 @@ contract WormholeElectionModuleSatellite is
         uint256 currentEpoch = Council.load().currentElectionId;
 
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        sendMessage(
+        transmit(
             wh.wormhole,
             abi.encodeWithSelector(
                 IElectionModule._recvWithdrawVote.selector,

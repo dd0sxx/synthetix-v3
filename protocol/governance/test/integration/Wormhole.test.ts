@@ -22,7 +22,7 @@
 //         let ABI = ["emitCrossChainMessage(string memory message)"];
 //         let iface = new ethers.utils.Interface(ABI);
 //         let fullMessage = iface.encodeFunctionData("emitCrossChainMessage", ["hello wormhole!"]);
-//         // await chains.satellite1.GovernanceProxy.connect(voter.satellite1).sendMessage(WormholeRelayers.satellite1, fullMessage);
+//         // await chains.satellite1.GovernanceProxy.connect(voter.satellite1).transmit(WormholeRelayers.satellite1, fullMessage);
 //     });
 //   });
 // });

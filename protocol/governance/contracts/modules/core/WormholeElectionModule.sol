@@ -9,7 +9,9 @@ import {OwnableStorage} from "@synthetixio/core-contracts/contracts/ownership/Ow
 import {WormholeCrossChain} from "@synthetixio/core-modules/contracts/storage/WormholeCrossChain.sol";
 import {WormholeCrossChainModule} from "./WormholeCrossChainModule.sol";
 import {IElectionModule} from "../../interfaces/IElectionModule.sol";
+import {IDeliveryProvider} from "@synthetixio/core-modules/contracts/interfaces/IDeliveryProvider.sol";
 import {IWormhole} from "@synthetixio/core-modules/contracts/interfaces/IWormhole.sol";
+import {IWormholeRelayer} from "@synthetixio/core-modules/contracts/interfaces/IWormholeRelayer.sol";
 import {ElectionTally} from "../../submodules/election/ElectionTally.sol";
 import {Ballot} from "../../storage/Ballot.sol";
 import {Council} from "../../storage/Council.sol";
@@ -35,6 +37,7 @@ contract WormholeElectionModule is
     using Ballot for Ballot.Data;
     using Epoch for Epoch.Data;
 
+    uint256 private constant _CROSSCHAIN_GAS_LIMIT = 100000;
     uint8 private constant _MAX_BALLOT_SIZE = 1;
 
     event MessageRecieved(string indexed message);
@@ -53,7 +56,9 @@ contract WormholeElectionModule is
 
     function initOrUpdateElectionSettings(
         address[] memory initialCouncil,
-        IWormhole wormholeRouter,
+        IDeliveryProvider wormholeDeliveryProvider,
+        IWormhole wormholeCore,
+        IWormholeRelayer wormholeRelayer,
         uint8 minimumActiveMembers,
         uint64 initialNominationPeriodStartDate, // timestamp
         uint64 administrationPeriodDuration, // days
@@ -69,9 +74,9 @@ contract WormholeElectionModule is
         Council.Data storage council = Council.load();
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
 
-        if (address(wh.wormhole) == address(0)) {
-            wh.wormhole = wormholeRouter;
-        }
+        wh.wormholeCore = wormholeCore;
+        wh.wormholeRelayer = wormholeRelayer;
+        wh.wormholeDeliveryProvider = wormholeDeliveryProvider;
 
         // Convert given days to seconds
         administrationPeriodDuration = administrationPeriodDuration * 1 days;
@@ -166,15 +171,21 @@ contract WormholeElectionModule is
         council.validateEpochScheduleTweak(currentEpoch, newEpoch);
 
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        sendMessage(
-            wh.wormhole,
+        //              uint16 targetChain,
+        // address targetAddress,
+        // bytes memory payload,
+        // uint256 receiverValue,
+        // uint256 gasLimit
+        transmit(
+            wh.getSupportedNetworks(),
             abi.encodeWithSelector(
                 this._recvTweakEpochSchedule.selector,
                 council.currentElectionId,
                 newEpoch.nominationPeriodStartDate,
                 newEpoch.votingPeriodStartDate,
                 newEpoch.endDate
-            )
+            ),
+            _CROSSCHAIN_GAS_LIMIT
         );
 
         emit EpochScheduleUpdated(

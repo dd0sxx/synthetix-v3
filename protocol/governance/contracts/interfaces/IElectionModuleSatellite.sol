@@ -1,7 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {IDeliveryProvider} from "@synthetixio/core-modules/contracts/interfaces/IDeliveryProvider.sol";
 import {IWormhole} from "@synthetixio/core-modules/contracts/interfaces/IWormhole.sol";
+import {IWormholeRelayer} from "@synthetixio/core-modules/contracts/interfaces/IWormholeRelayer.sol";
 
 /// @title Election module council with minimal logic to be deployed on Satellite chains
 interface IElectionModuleSatellite {
@@ -16,7 +18,9 @@ interface IElectionModuleSatellite {
         uint64 nominationPeriodStartDate,
         uint64 votingPeriodStartDate,
         uint64 epochEndDate,
-        IWormhole wormholeRouter,
+        IWormhole wormholeCore,
+        IDeliveryProvider wormholeDeliveryProvider,
+        IWormholeRelayer wormholeRelayer,
         address[] calldata councilMembers
     ) external;
 

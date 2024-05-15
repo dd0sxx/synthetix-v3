@@ -8,7 +8,9 @@ import {InitializableMixin} from "@synthetixio/core-contracts/contracts/initiali
 import {ERC2771Context} from "@synthetixio/core-contracts/contracts/utils/ERC2771Context.sol";
 import {IElectionModule} from "../../interfaces/IElectionModule.sol";
 import {IElectionModuleSatellite} from "../../interfaces/IElectionModuleSatellite.sol";
+import {IDeliveryProvider} from "@synthetixio/core-modules/contracts/interfaces/IDeliveryProvider.sol";
 import {IWormhole} from "@synthetixio/core-modules/contracts/interfaces/IWormhole.sol";
+import {IWormholeRelayer} from "@synthetixio/core-modules/contracts/interfaces/IWormholeRelayer.sol";
 import {ElectionCredentials} from "../../submodules/election/ElectionCredentials.sol";
 import {Ballot} from "../../storage/Ballot.sol";
 import {CouncilMembers} from "../../storage/CouncilMembers.sol";
@@ -38,7 +40,9 @@ contract ElectionModuleSatellite is
         uint64 nominationPeriodStartDate,
         uint64 votingPeriodStartDate,
         uint64 epochEndDate,
-        IWormhole wormholeRouter, // just here because interface demands it
+        IWormhole wormholeCore,
+        IDeliveryProvider wormholeDeliveryProvider,
+        IWormholeRelayer wormholeRelayer,
         address[] calldata councilMembers
     ) external virtual {
         OwnableStorage.onlyOwner();
