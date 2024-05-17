@@ -146,17 +146,25 @@ interface IWormhole {
     }
 }
 
+// @custom:artifact @synthetixio/core-modules/contracts/interfaces/IWormholeRelayer.sol:IWormholeRelayerDelivery
+interface IWormholeRelayerDelivery {
+    enum DeliveryStatus {
+        SUCCESS,
+        RECEIVER_FAILURE
+    }
+    enum RefundStatus {
+        REFUND_SENT,
+        REFUND_FAIL,
+        CROSS_CHAIN_REFUND_SENT,
+        CROSS_CHAIN_REFUND_FAIL_PROVIDER_NOT_SUPPORTED,
+        CROSS_CHAIN_REFUND_FAIL_NOT_ENOUGH,
+        NO_REFUND_REQUESTED
+    }
+}
+
 // @custom:artifact @synthetixio/core-modules/contracts/modules/NftModule.sol:NftModule
 contract NftModule {
     bytes32 internal constant _INITIALIZED_NAME = "NftModule";
-}
-
-// @custom:artifact @synthetixio/core-modules/contracts/modules/WormholeCrossChainModule.sol:WormholeCrossChainModule
-contract WormholeCrossChainModule {
-    struct DemoMessage {
-        address recipient;
-        string message;
-    }
 }
 
 // @custom:artifact @synthetixio/core-modules/contracts/storage/AssociatedSystem.sol:AssociatedSystem
@@ -211,8 +219,10 @@ library Initialized {
 library WormholeCrossChain {
     bytes32 private constant _SLOT_WORMHOLE_CROSS_CHAIN = keccak256(abi.encode("io.synthetix.core-modules.WormholeCrossChain"));
     struct Data {
-        address wormhole;
-        uint32 nonce;
+        address wormholeCore;
+        address wormholeDeliveryProvider;
+        address wormholeRelayer;
+        SetUtil.UintSet supportedNetworks;
         mapping(uint16 => bytes32) registeredEmitters;
         mapping(bytes32 => bool) hasProcessedMessage;
     }
@@ -264,7 +274,13 @@ contract ElectionModuleSatellite {
 
 // @custom:artifact contracts/modules/core/WormholeElectionModule.sol:WormholeElectionModule
 contract WormholeElectionModule {
+    uint256 private constant _CROSSCHAIN_GAS_LIMIT = 100000;
     uint8 private constant _MAX_BALLOT_SIZE = 1;
+}
+
+// @custom:artifact contracts/modules/core/WormholeElectionModuleSatelite.sol:WormholeElectionModuleSatellite
+contract WormholeElectionModuleSatellite {
+    uint256 private constant _CROSSCHAIN_GAS_LIMIT = 100000;
 }
 
 // @custom:artifact contracts/storage/Ballot.sol:Ballot
