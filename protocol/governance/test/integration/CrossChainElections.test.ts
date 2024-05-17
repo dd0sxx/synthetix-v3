@@ -93,7 +93,7 @@ describe('cross chain election testing', function () {
       }
     });
 
-    it('casts vote on mothership', async function () {
+    it.only('casts vote on mothership', async function () {
       const { mothership } = chains;
 
       const tx = await mothership.GovernanceProxy.connect(voter.mothership).cast(

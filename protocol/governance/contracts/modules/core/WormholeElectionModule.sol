@@ -21,12 +21,7 @@ import {Epoch} from "../../storage/Epoch.sol";
 import {ElectionSettings} from "../../storage/ElectionSettings.sol";
 import {ElectionModuleSatellite} from "./ElectionModuleSatellite.sol";
 
-contract WormholeElectionModule is
-    IElectionModule,
-    ElectionModuleSatellite,
-    ElectionTally,
-    WormholeCrossChainModule
-{
+contract WormholeElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTally {
     using SetUtil for SetUtil.AddressSet;
     using SetUtil for SetUtil.Bytes32Set;
     using Council for Council.Data;

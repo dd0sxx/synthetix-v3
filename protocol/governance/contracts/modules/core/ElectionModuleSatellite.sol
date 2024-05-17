@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {SetUtil} from "@synthetixio/core-contracts/contracts/utils/SetUtil.sol";
-import {CrossChain} from "@synthetixio/core-modules/contracts/storage/CrossChain.sol";
+import {WormholeCrossChain} from "@synthetixio/core-modules/contracts/storage/WormholeCrossChain.sol";
+import {WormholeCrossChainModule} from "./WormholeCrossChainModule.sol";
 import {OwnableStorage} from "@synthetixio/core-contracts/contracts/ownership/OwnableStorage.sol";
 import {InitializableMixin} from "@synthetixio/core-contracts/contracts/initializable/InitializableMixin.sol";
 import {ERC2771Context} from "@synthetixio/core-contracts/contracts/utils/ERC2771Context.sol";
@@ -20,12 +21,13 @@ import {Epoch} from "../../storage/Epoch.sol";
 contract ElectionModuleSatellite is
     IElectionModuleSatellite,
     InitializableMixin,
-    ElectionCredentials
+    ElectionCredentials,
+    WormholeCrossChainModule
 {
     using Ballot for Ballot.Data;
     using Council for Council.Data;
     using CouncilMembers for CouncilMembers.Data;
-    using CrossChain for CrossChain.Data;
+    using WormholeCrossChain for WormholeCrossChain.Data;
     using Epoch for Epoch.Data;
     using SetUtil for SetUtil.AddressSet;
 
@@ -48,12 +50,17 @@ contract ElectionModuleSatellite is
         OwnableStorage.onlyOwner();
 
         Council.Data storage council = Council.load();
+        WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
 
         if (_isInitialized()) {
             return;
         }
 
         council.initialized = true;
+
+        wh.wormholeCore = wormholeCore;
+        wh.wormholeRelayer = wormholeRelayer;
+        wh.wormholeDeliveryProvider = wormholeDeliveryProvider;
 
         _setupEpoch(
             epochIndex,
@@ -77,31 +84,43 @@ contract ElectionModuleSatellite is
         address[] calldata candidates,
         uint256[] calldata amounts
     ) public payable override {
-        Council.onlyInPeriod(Epoch.ElectionPeriod.Vote);
+        {
+            Council.onlyInPeriod(Epoch.ElectionPeriod.Vote);
+        }
 
         address sender = ERC2771Context._msgSender();
+        bytes memory payload;
 
         /// @dev: load ballot with total votingPower, should have been prepared before,
         /// calling the prepareBallotWithSnapshot method
-        uint256 currentEpoch = Council.load().currentElectionId;
-        Ballot.Data storage ballot = Ballot.load(currentEpoch, sender, block.chainid);
+        {
+            uint256 currentEpoch = Council.load().currentElectionId;
 
-        if (ballot.votingPower == 0) {
-            revert NoVotingPower(sender, currentEpoch);
-        }
+            Ballot.Data storage ballot = Ballot.load(currentEpoch, sender, block.chainid);
+            uint256 votingPower = ballot.votingPower;
+            if (votingPower == 0) {
+                revert NoVotingPower(sender, currentEpoch);
+            }
 
-        CrossChain.Data storage cc = CrossChain.load();
-        cc.transmit(
-            cc.getChainIdAt(0),
-            abi.encodeWithSelector(
+            payload = abi.encodeWithSelector(
                 IElectionModule._recvCast.selector,
                 currentEpoch,
                 sender,
-                ballot.votingPower,
+                votingPower,
                 block.chainid,
                 candidates,
                 amounts
-            ),
+            );
+        }
+
+        WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
+        uint16 targetChain = uint16(wh.getChainIdAt(0));
+
+        transmit(
+            targetChain,
+            toAddress(wh.registeredEmitters[targetChain]),
+            payload,
+            msg.value,
             _CROSSCHAIN_GAS_LIMIT
         );
     }
@@ -113,9 +132,12 @@ contract ElectionModuleSatellite is
 
         uint256 currentEpoch = Council.load().currentElectionId;
 
-        CrossChain.Data storage cc = CrossChain.load();
-        cc.transmit(
-            cc.getChainIdAt(0),
+        WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
+
+        uint16 targetChain = uint16(wh.getChainIdAt(0));
+        transmit(
+            targetChain,
+            toAddress(wh.registeredEmitters[targetChain]),
             abi.encodeWithSelector(
                 IElectionModule._recvWithdrawVote.selector,
                 currentEpoch,
@@ -123,6 +145,7 @@ contract ElectionModuleSatellite is
                 block.chainid,
                 candidates
             ),
+            msg.value,
             _CROSSCHAIN_GAS_LIMIT
         );
     }
@@ -131,7 +154,7 @@ contract ElectionModuleSatellite is
         address[] calldata membersToDismiss,
         uint256 epochIndex
     ) external override {
-        CrossChain.onlyCrossChain();
+        WormholeCrossChain.onlyCrossChain();
 
         _removeCouncilMembers(membersToDismiss, epochIndex);
 
@@ -146,7 +169,7 @@ contract ElectionModuleSatellite is
         uint64 epochEndDate,
         address[] calldata councilMembers
     ) external override {
-        CrossChain.onlyCrossChain();
+        WormholeCrossChain.onlyCrossChain();
 
         _setupEpoch(
             epochIndex,
@@ -164,7 +187,7 @@ contract ElectionModuleSatellite is
         uint64 votingPeriodStartDate,
         uint64 epochEndDate
     ) external override {
-        CrossChain.onlyCrossChain();
+        WormholeCrossChain.onlyCrossChain();
 
         Epoch.Data storage epoch = Epoch.load(epochIndex);
 
