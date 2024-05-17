@@ -81,39 +81,46 @@ contract WormholeElectionModuleSatellite is
     }
 
     function cast(
-        uint16 targetChain,
-        address targetAddress,
-        uint256 receiverValue,
         address[] calldata candidates,
         uint256[] calldata amounts
     ) public payable override {
-        Council.onlyInPeriod(Epoch.ElectionPeriod.Vote);
+        {
+            Council.onlyInPeriod(Epoch.ElectionPeriod.Vote);
+        }
 
         address sender = ERC2771Context._msgSender();
+        bytes memory payload;
 
         /// @dev: load ballot with total votingPower, should have been prepared before,
         /// calling the prepareBallotWithSnapshot method
-        uint256 currentEpoch = Council.load().currentElectionId;
-        Ballot.Data storage ballot = Ballot.load(currentEpoch, sender, block.chainid);
+        {
+            uint256 currentEpoch = Council.load().currentElectionId;
 
-        if (ballot.votingPower == 0) {
-            revert NoVotingPower(sender, currentEpoch);
-        }
+            Ballot.Data storage ballot = Ballot.load(currentEpoch, sender, block.chainid);
+            uint256 votingPower = ballot.votingPower;
+            if (votingPower == 0) {
+                revert NoVotingPower(sender, currentEpoch);
+            }
 
-        WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        transmit(
-            targetChain,
-            targetAddress,
-            abi.encodeWithSelector(
+            payload = abi.encodeWithSelector(
                 IElectionModule._recvCast.selector,
                 currentEpoch,
                 sender,
-                ballot.votingPower,
+                votingPower,
                 block.chainid,
                 candidates,
                 amounts
-            ),
-            receiverValue,
+            );
+        }
+
+        WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
+        uint16 targetChain = uint16(wh.getChainIdAt(0));
+
+        transmit(
+            targetChain,
+            toAddress(wh.registeredEmitters[targetChain]),
+            payload,
+            msg.value,
             _CROSSCHAIN_GAS_LIMIT
         );
     }
@@ -126,15 +133,20 @@ contract WormholeElectionModuleSatellite is
         uint256 currentEpoch = Council.load().currentElectionId;
 
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
+
+        uint16 targetChain = uint16(wh.getChainIdAt(0));
         transmit(
-            wh.wormhole,
+            targetChain,
+            toAddress(wh.registeredEmitters[targetChain]),
             abi.encodeWithSelector(
                 IElectionModule._recvWithdrawVote.selector,
                 currentEpoch,
                 sender,
                 block.chainid,
                 candidates
-            )
+            ),
+            msg.value,
+            _CROSSCHAIN_GAS_LIMIT
         );
     }
 

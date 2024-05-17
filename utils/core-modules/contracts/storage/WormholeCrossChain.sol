@@ -1,9 +1,10 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >=0.8.11 <0.9.0;
 
-import {IWormhole} from "./../interfaces/IWormhole.sol";
-
 import {AccessError} from "@synthetixio/core-contracts/contracts/errors/AccessError.sol";
+import {IDeliveryProvider} from "./../interfaces/IDeliveryProvider.sol";
+import {IWormhole} from "./../interfaces/IWormhole.sol";
+import {IWormholeRelayer} from "./../interfaces/IWormholeRelayer.sol";
 import {OwnableStorage} from "@synthetixio/core-contracts/contracts/ownership/OwnableStorage.sol";
 import {ParameterError} from "@synthetixio/core-contracts/contracts/errors/ParameterError.sol";
 import {SetUtil} from "@synthetixio/core-contracts/contracts/utils/SetUtil.sol";
@@ -16,18 +17,29 @@ library WormholeCrossChain {
     using SetUtil for SetUtil.UintSet;
     using SafeCastU256 for uint256;
 
+    event ProcessedWormholeMessage(bytes payload, bytes result);
+
+    error UnsupportedNetwork(uint64);
+    // error InvalidNetwork(uint64);
+    // error InsufficientCcipFee(uint256 requiredAmount, uint256 availableAmount);
+    // error InvalidMessage();
+
     bytes32 private constant _SLOT_WORMHOLE_CROSS_CHAIN =
         keccak256(abi.encode("io.synthetix.core-modules.WormholeCrossChain"));
 
     struct Data {
-        IWormhole wormhole;
-        uint32 nonce;
+        IWormhole wormholeCore;
+        IDeliveryProvider wormholeDeliveryProvider;
+        IWormholeRelayer wormholeRelayer;
+        SetUtil.UintSet supportedNetworks;
         mapping(uint16 => bytes32) registeredEmitters; //chain id => emitter address
         mapping(bytes32 => bool) hasProcessedMessage;
     }
 
     function configureWormhole(
-        IWormhole wormhole,
+        IWormhole wormholeCore,
+        IDeliveryProvider wormholeDeliveryProvider,
+        IWormholeRelayer wormholeRelayer,
         uint16[] memory supportedNetworks,
         bytes32[] memory emitters
     ) external {
@@ -41,7 +53,9 @@ library WormholeCrossChain {
         }
 
         Data storage wh = load();
-        wh.wormhole = wormhole;
+        wh.wormholeCore = wormholeCore;
+        wh.wormholeDeliveryProvider = wormholeDeliveryProvider;
+        wh.wormholeRelayer = wormholeRelayer;
 
         for (uint256 i = 0; i < supportedNetworks.length; i++) {
             wh.registeredEmitters[supportedNetworks[i]] = emitters[i];
@@ -55,6 +69,12 @@ library WormholeCrossChain {
         }
     }
 
+    function validateChainId(Data storage self, uint256 chainId) internal view {
+        if (!self.supportedNetworks.contains(chainId)) {
+            revert UnsupportedNetwork(chainId.to64());
+        }
+    }
+
     function onlyCrossChain() internal view {
         if (ERC2771Context._msgSender() != address(this)) {
             revert AccessError.Unauthorized(ERC2771Context._msgSender());
@@ -63,5 +83,20 @@ library WormholeCrossChain {
 
     function emitterAddress() public view returns (bytes32) {
         return bytes32(uint256(uint160(address(this))));
+    }
+
+    function getChainIdAt(Data storage self, uint64 index) internal view returns (uint64) {
+        return self.supportedNetworks.valueAt(index + 1).to64();
+    }
+
+    function getSupportedNetworks(Data storage self) internal view returns (uint64[] memory) {
+        SetUtil.UintSet storage supportedNetworks = self.supportedNetworks;
+        uint256[] memory supportedChains = supportedNetworks.values();
+        uint64[] memory chains = new uint64[](supportedChains.length);
+        for (uint i = 0; i < supportedChains.length; i++) {
+            uint64 chainId = supportedChains[i].to64();
+            chains[i] = chainId;
+        }
+        return chains;
     }
 }

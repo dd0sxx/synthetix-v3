@@ -40,8 +40,8 @@ contract ElectionModuleSatellite is
         uint64 nominationPeriodStartDate,
         uint64 votingPeriodStartDate,
         uint64 epochEndDate,
-        IWormhole wormholeCore,
         IDeliveryProvider wormholeDeliveryProvider,
+        IWormhole wormholeCore,
         IWormholeRelayer wormholeRelayer,
         address[] calldata councilMembers
     ) external virtual {

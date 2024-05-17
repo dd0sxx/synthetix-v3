@@ -65,42 +65,51 @@ contract WormholeElectionModule is
         uint64 nominationPeriodDuration, // days
         uint64 votingPeriodDuration // days
     ) external override {
-        OwnableStorage.onlyOwner();
+        {
+            OwnableStorage.onlyOwner();
 
-        if (initialCouncil.length > type(uint8).max) {
-            revert TooManyMembers();
+            if (initialCouncil.length > type(uint8).max) {
+                revert TooManyMembers();
+            }
         }
 
         Council.Data storage council = Council.load();
-        WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
 
-        wh.wormholeCore = wormholeCore;
-        wh.wormholeRelayer = wormholeRelayer;
-        wh.wormholeDeliveryProvider = wormholeDeliveryProvider;
+        uint8 epochSeatCount;
+        uint64 epochDuration;
+        ElectionSettings.Data storage nextElectionSettings;
 
-        // Convert given days to seconds
-        administrationPeriodDuration = administrationPeriodDuration * 1 days;
-        nominationPeriodDuration = nominationPeriodDuration * 1 days;
-        votingPeriodDuration = votingPeriodDuration * 1 days;
+        {
+            WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
+            wh.wormholeCore = wormholeCore;
+            wh.wormholeRelayer = wormholeRelayer;
+            wh.wormholeDeliveryProvider = wormholeDeliveryProvider;
 
-        // solhint-disable-next-line numcast/safe-cast
-        uint8 epochSeatCount = uint8(initialCouncil.length);
+            // Convert given days to seconds
+            administrationPeriodDuration = administrationPeriodDuration * 1 days;
+            nominationPeriodDuration = nominationPeriodDuration * 1 days;
+            votingPeriodDuration = votingPeriodDuration * 1 days;
 
-        uint64 epochDuration = administrationPeriodDuration +
-            nominationPeriodDuration +
-            votingPeriodDuration;
+            // solhint-disable-next-line numcast/safe-cast
+            epochSeatCount = uint8(initialCouncil.length);
 
-        ElectionSettings.Data storage nextElectionSettings = council.getNextElectionSettings();
+            epochDuration =
+                administrationPeriodDuration +
+                nominationPeriodDuration +
+                votingPeriodDuration;
 
-        // Set the expected epoch durations for next council
-        nextElectionSettings.setElectionSettings(
-            epochSeatCount,
-            minimumActiveMembers,
-            epochDuration,
-            nominationPeriodDuration,
-            votingPeriodDuration,
-            3 days // maxDateAdjustmentTolerance
-        );
+            nextElectionSettings = council.getNextElectionSettings();
+
+            // Set the expected epoch durations for next council
+            nextElectionSettings.setElectionSettings(
+                epochSeatCount,
+                minimumActiveMembers,
+                epochDuration,
+                nominationPeriodDuration,
+                votingPeriodDuration,
+                3 days // maxDateAdjustmentTolerance
+            );
+        }
 
         // Initialize first epoch if necessary
         if (!_isInitialized()) {
@@ -171,22 +180,23 @@ contract WormholeElectionModule is
         council.validateEpochScheduleTweak(currentEpoch, newEpoch);
 
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        //              uint16 targetChain,
-        // address targetAddress,
-        // bytes memory payload,
-        // uint256 receiverValue,
-        // uint256 gasLimit
-        transmit(
-            wh.getSupportedNetworks(),
-            abi.encodeWithSelector(
-                this._recvTweakEpochSchedule.selector,
-                council.currentElectionId,
-                newEpoch.nominationPeriodStartDate,
-                newEpoch.votingPeriodStartDate,
-                newEpoch.endDate
-            ),
-            _CROSSCHAIN_GAS_LIMIT
-        );
+
+        uint64[] memory chains = wh.getSupportedNetworks();
+        for (uint i = 0; i < chains.length; i++) {
+            transmit(
+                uint16(chains[i]),
+                toAddress(wh.registeredEmitters[uint16(chains[i])]),
+                abi.encodeWithSelector(
+                    this._recvTweakEpochSchedule.selector,
+                    council.currentElectionId,
+                    newEpoch.nominationPeriodStartDate,
+                    newEpoch.votingPeriodStartDate,
+                    newEpoch.endDate
+                ),
+                0,
+                _CROSSCHAIN_GAS_LIMIT
+            );
+        }
 
         emit EpochScheduleUpdated(
             newEpoch.nominationPeriodStartDate,
@@ -223,13 +233,19 @@ contract WormholeElectionModule is
         Epoch.Data storage epoch = council.getCurrentEpoch();
 
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        sendMessage(
-            wh.wormhole,
+
+        uint16 chain = uint16(wh.getChainIdAt(0));
+
+        transmit(
+            chain,
+            toAddress(wh.registeredEmitters[chain]),
             abi.encodeWithSelector(
                 this._recvDismissMembers.selector,
                 membersToDismiss,
                 council.currentElectionId
-            )
+            ),
+            msg.value,
+            _CROSSCHAIN_GAS_LIMIT
         );
 
         CouncilMembers.Data storage membersStore = CouncilMembers.load();
@@ -377,16 +393,23 @@ contract WormholeElectionModule is
         );
         if (election.nominees.values().length < electionSettings.minimumActiveMembers) {
             WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-            sendMessage(
-                wh.wormhole,
-                abi.encodeWithSelector(
-                    this._recvTweakEpochSchedule.selector,
-                    council.currentElectionId,
-                    epoch.nominationPeriodStartDate,
-                    epoch.votingPeriodStartDate,
-                    epoch.endDate + electionSettings.votingPeriodDuration
-                )
-            );
+
+            uint64[] memory chains = wh.getSupportedNetworks();
+            for (uint i = 0; i < chains.length; i++) {
+                transmit(
+                    uint16(chains[i]),
+                    toAddress(wh.registeredEmitters[uint16(chains[i])]),
+                    abi.encodeWithSelector(
+                        this._recvTweakEpochSchedule.selector,
+                        council.currentElectionId,
+                        epoch.nominationPeriodStartDate,
+                        epoch.votingPeriodStartDate,
+                        epoch.endDate + electionSettings.votingPeriodDuration
+                    ),
+                    0,
+                    _CROSSCHAIN_GAS_LIMIT
+                );
+            }
         } else {
             if (election.evaluated) revert ElectionAlreadyEvaluated();
 
@@ -414,38 +437,47 @@ contract WormholeElectionModule is
 
         Council.Data storage council = Council.load();
         Election.Data storage election = council.getCurrentElection();
+        Epoch.Data memory nextEpoch;
+        {
+            if (!election.evaluated) revert ElectionNotEvaluated();
 
-        if (!election.evaluated) revert ElectionNotEvaluated();
+            ElectionSettings.Data storage currentElectionSettings = council
+                .getCurrentElectionSettings();
+            ElectionSettings.Data storage nextElectionSettings = council.getNextElectionSettings();
 
-        ElectionSettings.Data storage currentElectionSettings = council
-            .getCurrentElectionSettings();
-        ElectionSettings.Data storage nextElectionSettings = council.getNextElectionSettings();
+            nextElectionSettings.copyMissingFrom(currentElectionSettings);
+            nextEpoch = _computeEpochFromSettings(nextElectionSettings);
 
-        nextElectionSettings.copyMissingFrom(currentElectionSettings);
-        Epoch.Data memory nextEpoch = _computeEpochFromSettings(nextElectionSettings);
-
-        council.validateEpochSchedule(
-            nextEpoch.startDate,
-            nextEpoch.nominationPeriodStartDate,
-            nextEpoch.votingPeriodStartDate,
-            nextEpoch.endDate
-        );
-
-        council.newElection();
-
-        WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        sendMessage(
-            wh.wormhole,
-            abi.encodeWithSelector(
-                this._recvResolve.selector,
-                council.currentElectionId,
+            council.validateEpochSchedule(
                 nextEpoch.startDate,
                 nextEpoch.nominationPeriodStartDate,
                 nextEpoch.votingPeriodStartDate,
-                nextEpoch.endDate,
-                election.winners.values()
-            )
-        );
+                nextEpoch.endDate
+            );
+
+            council.newElection();
+        }
+
+        WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
+
+        uint64[] memory chains = wh.getSupportedNetworks();
+        for (uint i = 0; i < chains.length; i++) {
+            transmit(
+                uint16(chains[i]),
+                toAddress(wh.registeredEmitters[uint16(chains[i])]),
+                abi.encodeWithSelector(
+                    this._recvResolve.selector,
+                    council.currentElectionId,
+                    nextEpoch.startDate,
+                    nextEpoch.nominationPeriodStartDate,
+                    nextEpoch.votingPeriodStartDate,
+                    nextEpoch.endDate,
+                    election.winners.values()
+                ),
+                0,
+                _CROSSCHAIN_GAS_LIMIT
+            );
+        }
 
         election.resolved = true;
 
