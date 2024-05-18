@@ -1,4 +1,4 @@
-name = "synthetix-governance-satellite"
+name = "synthetix-governance-satellite-avalanche-fuji"
 description = "On-chain voting for synthetix councils - Logic for satellite chains"
 version = "<%= package.version %>"
 include = ["./tomls/proxy-base.toml", "./tomls/council-token.toml"]
@@ -21,13 +21,13 @@ defaultValue = "0"
 [setting.wormhole_delivery_provider]
 defaultValue = "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a"
 
-# Optimistic goerli wormhole address, taken from: https://docs.wormhole.com/wormhole/reference/constants#core-contracts
+# Avalanche fuji wormhole address, taken from: https://docs.wormhole.com/wormhole/reference/constants#core-contracts
 [setting.wormhole_core]
-defaultValue = "0x6b9C8671cdDC8dEab9c719bB87cBd3e782bA6a35"
+defaultValue = "0x7bbcE28e64B3F8b84d876Ab298393c38ad7aac4C"
 
-# Optimistic goerli wormhole relayer address, taken from: https://docs.wormhole.com/wormhole/reference/constants#standard-relayer
+# Avalanche fuji wormhole relayer address, taken from: https://docs.wormhole.com/wormhole/reference/constants#standard-relayer
 [setting.wormhole_relayer]
-defaultValue = "0x01A957A525a5b7A72808bA9D10c389674E459891"
+defaultValue = "0xA3cF45939bD6260bcFe3D66bc73d60f19e49a8BB"
 
 [setting.initial_epoch_end_date]
 defaultValue = "0"

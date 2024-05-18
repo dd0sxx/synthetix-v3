@@ -121,7 +121,7 @@ before(`setup integration chains`, async function () {
     }),
     spinChain<Proxies['satellite2']>({
       networkName: 'avalanche-fuji',
-      cannonfile: 'cannonfile.satellite.test.toml',
+      cannonfile: 'cannonfile.avalanche-fuji-satelite.test.toml',
       cannonfileSettings,
       typechainFolder,
       writeDeployments,

@@ -9,9 +9,11 @@ defaultValue = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 [setting.wormhole_delivery_provider]
 defaultValue = "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a"
 
+# Ethereum testnet wormhole address, taken from:https://docs.wormhole.com/wormhole/reference/constants#core-contracts
 [setting.wormhole_core]
-defaultValue = "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a"
+defaultValue = "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78"
 
+# Ethereum testnet wormhole relayer address, taken from: https://docs.wormhole.com/wormhole/reference/constants#standard-relayer
 [setting.wormhole_relayer]
 defaultValue = "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a"
 
