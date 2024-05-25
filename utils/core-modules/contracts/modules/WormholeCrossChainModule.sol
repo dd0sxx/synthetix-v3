@@ -5,6 +5,7 @@ import {IWormhole} from "./../interfaces/IWormhole.sol";
 import {IWormholeRelayer} from "./../interfaces/IWormholeRelayer.sol";
 import {IWormholeReceiver} from "./../interfaces/IWormholeReceiver.sol";
 import "../storage/WormholeCrossChain.sol";
+import "hardhat/console.sol";
 // import "wormhole-solidity-sdk/interfaces/IWormholeRelayerRelayer.sol";
 // import "wormhole-solidity-sdk/interfaces/IWormholeRelayerReceiver.sol";
 
@@ -12,10 +13,22 @@ import "../storage/WormholeCrossChain.sol";
  * @title Module with assorted cross-chain functions.
  */
 contract WormholeCrossChainModule is IWormholeReceiver {
-    function registerEmitter(uint16 chainId, bytes32 emitterAddress) public {
-        // require(msg.sender == owner);
+    function setRegisteredEmitters(uint16[] memory chainIds, address[] memory emitters) external {
+        OwnableStorage.onlyOwner();
+
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        wh.registeredEmitters[chainId] = emitterAddress;
+
+        if (chainIds.length != emitters.length) {
+            revert ParameterError.InvalidParameter(
+                "emitters",
+                "must match length of supportedNetworks"
+            );
+        }
+
+        for (uint256 i = 0; i < chainIds.length; i++) {
+            WormholeCrossChain.addSupportedNetwork(wh, chainIds[i]);
+            WormholeCrossChain.addEmitter(wh, chainIds[i], emitters[i]);
+        }
     }
 
     function receiveEncodedMsg(
@@ -53,20 +66,36 @@ contract WormholeCrossChainModule is IWormholeReceiver {
     }
 
     function transmit(
+        WormholeCrossChain.Data storage self,
         uint16 targetChain,
         address targetAddress,
         bytes memory payload,
         uint256 receiverValue,
         uint256 gasLimit
-    ) public returns (uint64 sequence) {
-        WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
-        sequence = wh.wormholeRelayer.sendPayloadToEvm(
-            targetChain,
-            targetAddress,
-            payload,
-            receiverValue,
-            gasLimit
-        );
+    ) internal returns (uint64 sequence) {
+        console.log("wormholeRelayer %s", address(self.wormholeRelayer));
+        console.log("targetChain %s", targetChain);
+        console.log("targetAddress %s", targetAddress);
+        // console.log("payload %s", payload);
+        console.log("receiverValue %s", receiverValue);
+        console.log("gasLimit %s", gasLimit);
+        console.log("block.chainid %s", block.chainid);
+        // (uint256 requiredMsgValue, ) = self.wormholeRelayer.quoteEVMDeliveryPrice(
+        //     targetChain,
+        //     receiverValue,
+        //     gasLimit
+        // );
+        (uint256 requiredMsgValue, ) = IWormholeRelayer(0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470)
+            .quoteEVMDeliveryPrice(10002, 0, 100000);
+        console.log("requiredMsgValue %s", requiredMsgValue);
+        // sequence = self.wormholeRelayer.sendPayloadToEvm(
+        //     targetChain,
+        //     targetAddress,
+        //     payload,
+        //     receiverValue,
+        //     gasLimit
+        // );
+        // console.log("sequence %s", sequence);
     }
 
     /**
@@ -83,10 +112,10 @@ contract WormholeCrossChainModule is IWormholeReceiver {
     }
 
     function toAddress(bytes32 _bytes) internal pure returns (address) {
-        address addr;
-        assembly {
-            addr := mload(add(_bytes, 20))
-        }
-        return addr;
+        return address(uint160(uint256(_bytes)));
+    }
+
+    function toBytes32(address _address) internal pure returns (bytes32) {
+        return bytes32(uint256(uint160(_address)));
     }
 }

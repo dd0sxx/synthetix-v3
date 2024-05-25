@@ -17,6 +17,10 @@ library WormholeCrossChain {
     using SetUtil for SetUtil.UintSet;
     using SafeCastU256 for uint256;
 
+    event NewEmitter(uint64 newChainId, address emitterAddress);
+
+    event NewSupportedCrossChainNetwork(uint64 newChainId);
+
     event ProcessedWormholeMessage(bytes payload, bytes result);
 
     error UnsupportedNetwork(uint64);
@@ -32,7 +36,7 @@ library WormholeCrossChain {
         IDeliveryProvider wormholeDeliveryProvider;
         IWormholeRelayer wormholeRelayer;
         SetUtil.UintSet supportedNetworks;
-        mapping(uint16 => bytes32) registeredEmitters; //chain id => emitter address
+        mapping(uint16 => bytes32) registeredEmitters; //chain id => emitter address (bytes32)
         mapping(bytes32 => bool) hasProcessedMessage;
     }
 
@@ -41,7 +45,7 @@ library WormholeCrossChain {
         IDeliveryProvider wormholeDeliveryProvider,
         IWormholeRelayer wormholeRelayer,
         uint16[] memory supportedNetworks,
-        bytes32[] memory emitters
+        address[] memory emitters
     ) external {
         OwnableStorage.onlyOwner();
 
@@ -58,8 +62,19 @@ library WormholeCrossChain {
         wh.wormholeRelayer = wormholeRelayer;
 
         for (uint256 i = 0; i < supportedNetworks.length; i++) {
-            wh.registeredEmitters[supportedNetworks[i]] = emitters[i];
+            addSupportedNetwork(wh, supportedNetworks[i]);
+            addEmitter(wh, supportedNetworks[i], emitters[i]);
         }
+    }
+
+    function addSupportedNetwork(Data storage self, uint16 chainId) internal {
+        self.supportedNetworks.add(chainId);
+        emit NewSupportedCrossChainNetwork(chainId);
+    }
+
+    function addEmitter(Data storage self, uint16 chainId, address emitter) internal {
+        self.registeredEmitters[chainId] = bytes32(uint256(uint160(emitter)));
+        emit NewEmitter(chainId, emitter);
     }
 
     function load() internal pure returns (Data storage crossChain) {
@@ -98,5 +113,10 @@ library WormholeCrossChain {
             chains[i] = chainId;
         }
         return chains;
+    }
+
+    function getWormholeRelayer() internal view returns (IWormholeRelayer) {
+        Data storage wh = load();
+        return wh.wormholeRelayer;
     }
 }
