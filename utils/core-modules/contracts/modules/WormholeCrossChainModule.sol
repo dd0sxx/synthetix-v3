@@ -88,14 +88,14 @@ contract WormholeCrossChainModule is IWormholeReceiver {
         (uint256 requiredMsgValue, ) = IWormholeRelayer(0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470)
             .quoteEVMDeliveryPrice(10002, 0, 100000);
         console.log("requiredMsgValue %s", requiredMsgValue);
-        // sequence = self.wormholeRelayer.sendPayloadToEvm(
-        //     targetChain,
-        //     targetAddress,
-        //     payload,
-        //     receiverValue,
-        //     gasLimit
-        // );
-        // console.log("sequence %s", sequence);
+        sequence = self.wormholeRelayer.sendPayloadToEvm(
+            targetChain,
+            targetAddress,
+            payload,
+            receiverValue,
+            gasLimit
+        );
+        console.log("sequence %s", sequence);
     }
 
     /**
