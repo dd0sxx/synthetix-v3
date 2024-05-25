@@ -117,6 +117,7 @@ contract WormholeElectionModuleSatellite is
         uint16 targetChain = uint16(wh.getChainIdAt(0));
 
         transmit(
+            wh,
             targetChain,
             toAddress(wh.registeredEmitters[targetChain]),
             payload,
@@ -136,6 +137,7 @@ contract WormholeElectionModuleSatellite is
 
         uint16 targetChain = uint16(wh.getChainIdAt(0));
         transmit(
+            wh,
             targetChain,
             toAddress(wh.registeredEmitters[targetChain]),
             abi.encodeWithSelector(

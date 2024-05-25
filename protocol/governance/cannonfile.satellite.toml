@@ -21,13 +21,13 @@ defaultValue = "0"
 [setting.wormhole_delivery_provider]
 defaultValue = "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a"
 
-# Optimistic goerli wormhole address, taken from: https://docs.wormhole.com/wormhole/reference/constants#core-contracts
+# Optimistic sepolia wormhole address, taken from: https://docs.wormhole.com/wormhole/reference/constants#core-contracts
 [setting.wormhole_core]
-defaultValue = "0x6b9C8671cdDC8dEab9c719bB87cBd3e782bA6a35"
+defaultValue = "0x31377888146f3253211EFEf5c676D41ECe7D58Fe"
 
-# Optimistic goerli wormhole relayer address, taken from: https://docs.wormhole.com/wormhole/reference/constants#standard-relayer
+# Optimistic sepolia wormhole relayer address, taken from: https://docs.wormhole.com/wormhole/reference/constants#standard-relayer
 [setting.wormhole_relayer]
-defaultValue = "0x01A957A525a5b7A72808bA9D10c389674E459891"
+defaultValue = "0x93BAD53DDfB6132b0aC8E37f6029163E63372cEE"
 
 [setting.initial_epoch_end_date]
 defaultValue = "0"

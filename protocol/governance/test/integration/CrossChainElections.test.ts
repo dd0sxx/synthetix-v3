@@ -5,7 +5,7 @@ import assert from 'assert';
 import { ethers } from 'ethers';
 import { ElectionPeriod } from '../constants';
 import { typedEntries, typedValues } from '../helpers/object';
-import { ChainSelector, integrationBootstrap, SignerOnChains } from './bootstrap';
+import { ChainSelector, integrationBootstrap, SignerOnChains, WormholeChainSelector } from './bootstrap';
 
 describe('cross chain election testing', function () {
   const { chains, fixtureSignerOnChains, fastForwardChainsTo } = integrationBootstrap();
@@ -30,8 +30,8 @@ describe('cross chain election testing', function () {
 
   before('register emitters', async function () {
     for (const chain of typedValues(chains)) {
-      const _chains = [chains.satellite1.chainId, chains.satellite2.chainId];
-      const _emitters = [chains.satellite1.GovernanceProxy.address, chains.satellite2.GovernanceProxy.address];
+      const _chains = [WormholeChainSelector.mothership, WormholeChainSelector.satellite1, WormholeChainSelector.satellite2];
+      const _emitters = [chains.mothership.GovernanceProxy.address, chains.satellite1.GovernanceProxy.address, chains.satellite2.GovernanceProxy.address];
       await chain.GovernanceProxy.connect(chain.signer).setRegisteredEmitters(_chains, _emitters);
     }
   });
@@ -104,11 +104,20 @@ describe('cross chain election testing', function () {
     it.only('casts vote on mothership', async function () {
       const { mothership } = chains;
 
-      const tx = await mothership.GovernanceProxy.connect(voter.mothership).cast(
-        [await nominee.mothership.getAddress()],
-        [ethers.utils.parseEther('100')]
-      );
-      await tx.wait();
+      const code = await mothership.provider.getCode('0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470');
+      console.log('code', code);
+      const bn = await mothership.provider.getBlockNumber();
+      console.log('block number: ', bn);
+
+      // const tx = await mothership.GovernanceProxy.connect(voter.mothership).cast(
+      //   [await nominee.mothership.getAddress()],
+      //   [ethers.utils.parseEther('100')],
+      //   // [ethers.utils.parseEther('100')],
+      //   {
+      //     gasLimit: 9000000,
+      //   }
+      // );
+      // await tx.wait();
 
       // const hasVoted = await mothership.GovernanceProxy.hasVoted(
       //   await voter.mothership.getAddress(),

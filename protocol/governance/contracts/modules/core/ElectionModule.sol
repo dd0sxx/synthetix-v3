@@ -178,6 +178,7 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
         uint64[] memory chains = wh.getSupportedNetworks();
         for (uint i = 0; i < chains.length; i++) {
             transmit(
+                wh,
                 uint16(chains[i]),
                 toAddress(wh.registeredEmitters[uint16(chains[i])]),
                 abi.encodeWithSelector(
@@ -231,6 +232,7 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
         uint16 chain = uint16(wh.getChainIdAt(0));
 
         transmit(
+            wh,
             chain,
             toAddress(wh.registeredEmitters[chain]),
             abi.encodeWithSelector(
@@ -391,6 +393,7 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
             uint64[] memory chains = wh.getSupportedNetworks();
             for (uint i = 0; i < chains.length; i++) {
                 transmit(
+                    wh,
                     uint16(chains[i]),
                     toAddress(wh.registeredEmitters[uint16(chains[i])]),
                     abi.encodeWithSelector(
@@ -457,6 +460,7 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
         uint64[] memory chains = wh.getSupportedNetworks();
         for (uint i = 0; i < chains.length; i++) {
             transmit(
+                wh,
                 uint16(chains[i]),
                 toAddress(wh.registeredEmitters[uint16(chains[i])]),
                 abi.encodeWithSelector(
