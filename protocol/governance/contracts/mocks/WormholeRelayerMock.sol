@@ -24,6 +24,21 @@ contract WormholeRelayerMock {
         uint8 consistencyLevel;
     }
 
+    struct DeliveryInstruction {
+        uint16 targetChain;
+        bytes32 targetAddress;
+        bytes payload;
+        TargetNative requestedReceiverValue;
+        TargetNative extraReceiverValue;
+        bytes encodedExecutionInfo;
+        uint16 refundChain;
+        bytes32 refundAddress;
+        bytes32 refundDeliveryProvider;
+        bytes32 sourceDeliveryProvider;
+        bytes32 senderAddress;
+        MessageKey[] messageKeys;
+    }
+
     struct EvmExecutionParamsV1 {
         Gas gasLimit;
     }
@@ -31,6 +46,12 @@ contract WormholeRelayerMock {
     enum ExecutionParamsVersion {
         EVM_V1
     }
+
+    event SendEvent(
+        uint64 indexed sequence,
+        LocalNative deliveryQuote,
+        LocalNative paymentForExtraReceiverValue
+    );
 
     uint8 internal constant CONSISTENCY_LEVEL_FINALIZED = 15;
     uint8 internal constant CONSISTENCY_LEVEL_INSTANT = 200;
@@ -159,53 +180,45 @@ contract WormholeRelayerMock {
     function send(Send memory sendParams) internal returns (uint64 sequence) {
         IDeliveryProvider provider = IDeliveryProvider(sendParams.deliveryProviderAddress);
 
-        // Revert if delivery provider does not support the target chain
-        if (!provider.isChainSupported(sendParams.targetChain)) {
-            revert DeliveryProviderDoesNotSupportTargetChain(
-                sendParams.deliveryProviderAddress,
-                sendParams.targetChain
-            );
-        }
-
         // Obtain the delivery provider's fee for this delivery, as well as some encoded info (e.g. refund per unit of gas unused)
-        (LocalNative deliveryPrice, bytes memory encodedExecutionInfo) = provider
-            .quoteDeliveryPrice(
-                sendParams.targetChain,
-                sendParams.receiverValue,
-                sendParams.encodedExecutionParameters
-            );
+        (uint256 deliveryPrice, bytes memory encodedExecutionInfo) = provider.quoteDeliveryPrice(
+            sendParams.targetChain,
+            TargetNative.unwrap(sendParams.receiverValue),
+            sendParams.encodedExecutionParameters
+        );
 
         // Check if user passed in 'one wormhole message fee' + 'delivery provider's fee'
         LocalNative wormholeMessageFee = getWormholeMessageFee();
-        checkMsgValue(wormholeMessageFee, deliveryPrice, sendParams.paymentForExtraReceiverValue);
-
-        checkKeyTypesSupported(provider, sendParams.messageKeys);
 
         // Encode all relevant info the delivery provider needs to perform the delivery as requested
-        bytes memory encodedInstruction = DeliveryInstruction({
-            targetChain: sendParams.targetChain,
-            targetAddress: sendParams.targetAddress,
-            payload: sendParams.payload,
-            requestedReceiverValue: sendParams.receiverValue,
-            extraReceiverValue: provider.quoteAssetConversion(
-                sendParams.targetChain,
-                sendParams.paymentForExtraReceiverValue
-            ),
-            encodedExecutionInfo: encodedExecutionInfo,
-            refundChain: sendParams.refundChain,
-            refundAddress: sendParams.refundAddress,
-            refundDeliveryProvider: provider.getTargetChainAddress(sendParams.targetChain),
-            sourceDeliveryProvider: toWormholeFormat(sendParams.deliveryProviderAddress),
-            senderAddress: toWormholeFormat(msg.sender),
-            messageKeys: sendParams.messageKeys
-        }).encode();
+        bytes memory encodedInstruction = abi.encode(
+            DeliveryInstruction({
+                targetChain: sendParams.targetChain,
+                targetAddress: sendParams.targetAddress,
+                payload: sendParams.payload,
+                requestedReceiverValue: sendParams.receiverValue,
+                extraReceiverValue: TargetNative.wrap(
+                    provider.quoteAssetConversion(
+                        sendParams.targetChain,
+                        LocalNative.unwrap(sendParams.paymentForExtraReceiverValue)
+                    )
+                ),
+                encodedExecutionInfo: encodedExecutionInfo,
+                refundChain: sendParams.refundChain,
+                refundAddress: sendParams.refundAddress,
+                refundDeliveryProvider: provider.getTargetChainAddress(sendParams.targetChain),
+                sourceDeliveryProvider: toWormholeFormat(sendParams.deliveryProviderAddress),
+                senderAddress: toWormholeFormat(msg.sender),
+                messageKeys: sendParams.messageKeys
+            })
+        );
 
         // Publish the encoded delivery instruction as a wormhole message
         // and pay the delivery provider their fee
         bool paymentSucceeded;
         (sequence, paymentSucceeded) = publishAndPay(
             wormholeMessageFee,
-            deliveryPrice,
+            LocalNative.wrap(deliveryPrice),
             sendParams.paymentForExtraReceiverValue,
             encodedInstruction,
             sendParams.consistencyLevel,
@@ -215,6 +228,36 @@ contract WormholeRelayerMock {
         if (!paymentSucceeded) {
             revert DeliveryProviderCannotReceivePayment();
         }
+    }
+
+    function publishAndPay(
+        LocalNative wormholeMessageFee,
+        LocalNative deliveryQuote,
+        LocalNative paymentForExtraReceiverValue,
+        bytes memory encodedInstruction,
+        uint8 consistencyLevel,
+        address payable rewardAddress
+    ) internal returns (uint64 sequence, bool paymentSucceeded) {
+        sequence = wormhole.publishMessage{value: LocalNative.unwrap(wormholeMessageFee)}(
+            0,
+            encodedInstruction,
+            consistencyLevel
+        );
+
+        paymentSucceeded = pay(
+            rewardAddress,
+            LocalNative.wrap(
+                LocalNative.unwrap(deliveryQuote) + LocalNative.unwrap(paymentForExtraReceiverValue)
+            )
+        );
+
+        emit SendEvent(sequence, deliveryQuote, paymentForExtraReceiverValue);
+    }
+
+    function pay(address payable receiver, LocalNative amount) internal returns (bool success) {
+        uint256 amount_ = LocalNative.unwrap(amount);
+        if (amount_ != 0) (success, ) = receiver.call{gas: gasleft(), value: amount_}(new bytes(0));
+        else success = true;
     }
 
     function vaaKeyArrayToMessageKeyArray(
@@ -249,6 +292,10 @@ contract WormholeRelayerMock {
     }
 
     function getWormholeMessageFee() internal view returns (LocalNative) {
-        return LocalNative.wrap(wormhole().messageFee());
+        return LocalNative.wrap(wormhole.messageFee());
+    }
+
+    function msgValue() internal view returns (LocalNative) {
+        return LocalNative.wrap(msg.value);
     }
 }
