@@ -1,4 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract WormholeMock {}
+import {WormholeMock as WormholeMockBase} from "@synthetixio/core-modules/contracts/mocks/WormholeMock.sol";
+
+// solhint-disable-next-line no-empty-blocks
+contract WormholeMock is WormholeMockBase {}

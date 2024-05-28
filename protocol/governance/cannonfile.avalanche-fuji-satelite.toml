@@ -21,14 +21,6 @@ defaultValue = "0"
 [setting.wormhole_delivery_provider]
 defaultValue = "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a"
 
-# Avalanche fuji wormhole address, taken from: https://docs.wormhole.com/wormhole/reference/constants#core-contracts
-[setting.wormhole_core]
-defaultValue = "0x7bbcE28e64B3F8b84d876Ab298393c38ad7aac4C"
-
-# Avalanche fuji wormhole relayer address, taken from: https://docs.wormhole.com/wormhole/reference/constants#standard-relayer
-[setting.wormhole_relayer]
-defaultValue = "0xA3cF45939bD6260bcFe3D66bc73d60f19e49a8BB"
-
 [setting.initial_epoch_end_date]
 defaultValue = "0"
 
