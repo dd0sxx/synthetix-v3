@@ -39,6 +39,14 @@ artifact = "contracts/modules/core/SnapshotVotePowerModule.sol:SnapshotVotePower
 [contract.CcipReceiverModule]
 artifact = "contracts/modules/core/CcipReceiverModule.sol:CcipReceiverModule"
 
+[contract.WormholeMock]
+artifact = "contracts/mocks/WormholeMock.sol:WormholeMock"
+args = ["10005"]
+
+[contract.WormholeRelayerMock]
+artifact = "contracts/mocks/WormholeRelayerMock.sol:WormholeRelayerMock"
+args = ["<%= contracts.WormholeMock.address %>"]
+
 [router.CoreRouter]
 contracts = [
     "AssociatedSystemsModule",

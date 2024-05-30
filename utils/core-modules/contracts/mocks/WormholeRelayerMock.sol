@@ -89,4 +89,12 @@ contract WormholeRelayerMock {
             bytes("")
         );
     }
+
+    function quoteEVMDeliveryPrice(
+        uint16 targetChain,
+        uint256 receiverValue,
+        uint256 gasLimit
+    ) public view returns (uint256 nativePriceQuote, uint256 targetChainRefundPerGasUnused) {
+        return (0, 0);
+    }
 }

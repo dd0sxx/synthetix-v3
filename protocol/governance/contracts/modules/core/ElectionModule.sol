@@ -19,6 +19,7 @@ import {Election} from "../../storage/Election.sol";
 import {Epoch} from "../../storage/Epoch.sol";
 import {ElectionSettings} from "../../storage/ElectionSettings.sol";
 import {ElectionModuleSatellite} from "./ElectionModuleSatellite.sol";
+import "hardhat/console.sol";
 
 contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTally {
     using SetUtil for SetUtil.AddressSet;
@@ -294,6 +295,7 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
         address[] calldata candidates,
         uint256[] calldata amounts
     ) external override {
+        console.log("Received cast");
         WormholeCrossChain.onlyCrossChain();
         Council.onlyInPeriod(Epoch.ElectionPeriod.Vote);
 

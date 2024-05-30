@@ -73,21 +73,11 @@ contract WormholeCrossChainModule is IWormholeReceiver {
         uint256 receiverValue,
         uint256 gasLimit
     ) internal returns (uint64 sequence) {
-        console.log("wormholeRelayer %s", address(self.wormholeRelayer));
-        console.log("targetChain %s", targetChain);
-        console.log("targetAddress %s", targetAddress);
-        // console.log("payload %s", payload);
-        console.log("receiverValue %s", receiverValue);
-        console.log("gasLimit %s", gasLimit);
-        console.log("block.chainid %s", block.chainid);
-        // (uint256 requiredMsgValue, ) = self.wormholeRelayer.quoteEVMDeliveryPrice(
-        //     targetChain,
-        //     receiverValue,
-        //     gasLimit
-        // );
-        (uint256 requiredMsgValue, ) = IWormholeRelayer(0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470)
-            .quoteEVMDeliveryPrice(10002, 0, 100000);
-        console.log("requiredMsgValue %s", requiredMsgValue);
+        (uint256 requiredMsgValue, ) = self.wormholeRelayer.quoteEVMDeliveryPrice(
+            targetChain,
+            receiverValue,
+            gasLimit
+        );
         sequence = self.wormholeRelayer.sendPayloadToEvm(
             targetChain,
             targetAddress,
@@ -95,7 +85,6 @@ contract WormholeCrossChainModule is IWormholeReceiver {
             receiverValue,
             gasLimit
         );
-        console.log("sequence %s", sequence);
     }
 
     /**

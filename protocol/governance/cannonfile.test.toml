@@ -24,6 +24,14 @@ artifact = "contracts/generated/test/TestableElectionStorage.sol:TestableElectio
 [contract.TestableEpochStorage]
 artifact = "contracts/generated/test/TestableEpochStorage.sol:TestableEpochStorage"
 
+[contract.WormholeMock]
+artifact = "contracts/mocks/WormholeMock.sol:WormholeMock"
+args = ["10002"]
+
+[contract.WormholeRelayerMock]
+artifact = "contracts/mocks/WormholeRelayerMock.sol:WormholeRelayerMock"
+args = ["<%= contracts.WormholeMock.address %>"]
+
 # Core Router + Testable modules
 [router.TestRouter]
 contracts = [

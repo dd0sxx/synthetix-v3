@@ -6,6 +6,7 @@ import {SafeCastU256} from "@synthetixio/core-contracts/contracts/utils/SafeCast
 import {Epoch} from "./Epoch.sol";
 import {Election} from "./Election.sol";
 import {ElectionSettings} from "./ElectionSettings.sol";
+import "hardhat/console.sol";
 
 library Council {
     using Epoch for Epoch.Data;

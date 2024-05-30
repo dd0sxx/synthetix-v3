@@ -10,6 +10,12 @@ contract WormholeMock {
         uint8 consistencyLevel
     );
 
+    uint256 public immutable CHAIN_ID;
+
+    constructor(uint256 chainId) {
+        CHAIN_ID = chainId;
+    }
+
     mapping(address => uint64) public sequences;
 
     function publishMessage(
@@ -17,7 +23,7 @@ contract WormholeMock {
         bytes memory payload,
         uint8 consistencyLevel
     ) external payable returns (uint64 sequence) {
-        sequence = sequences[msg.sender]++;
+        sequence = sequences[msg.sender]++; //TODO should this be tx.origin instead of msg.sender?
         emit LogMessagePublished(msg.sender, sequence, nonce, payload, consistencyLevel);
     }
 
@@ -25,7 +31,7 @@ contract WormholeMock {
         return 0;
     }
 
-    function chainId() external pure returns (uint256) {
-        return 1;
+    function chainId() external view returns (uint256) {
+        return CHAIN_ID;
     }
 }

@@ -68,12 +68,23 @@ describe('cross chain election testing', function () {
 
   describe('successful voting on all chains', function () {
     before('prepare snapshot record on all chains', async function () {
-      for (const chain of typedValues(chains)) {
-        await chain.GovernanceProxy.connect(chain.signer).setSnapshotContract(
-          chain.SnapshotRecordMock.address,
-          true
-        );
-      }
+      // for (const chain of typedValues(chains)) {
+      //   await chain.GovernanceProxy.connect(chain.signer).setSnapshotContract(
+      //     chain.SnapshotRecordMock.address,
+      //     true
+      //   );
+      await chains.mothership.GovernanceProxy.connect(chains.mothership.signer).setSnapshotContract(
+        chains.mothership.SnapshotRecordMock.address,
+        true
+      );
+      // await chains.satellite1.GovernanceProxy.connect(chains.satellite1.signer).setSnapshotContract(
+      //   chains.satellite1.SnapshotRecordMock.address,
+      //   true
+      // );
+      // await chains.satellite2.GovernanceProxy.connect(chains.satellite2.signer).setSnapshotContract(
+      //   chains.satellite2.SnapshotRecordMock.address,
+      //   true
+      // );
     });
 
     before('nominate', async function () {
@@ -84,47 +95,56 @@ describe('cross chain election testing', function () {
     before('preapare ballots on all chains', async function () {
       await fastForwardToVotingPeriod();
 
-      for (const [chainName, chain] of typedEntries(chains)) {
-        const snapshotId1 = await chain.GovernanceProxy.callStatic.takeVotePowerSnapshot(
-          chain.SnapshotRecordMock.address // TODO: should we remove this param? it is being set on setSnapshotContract
+      // for (const [chainName, chain] of typedEntries(chains)) {
+      //   const snapshotId1 = await chain.GovernanceProxy.callStatic.takeVotePowerSnapshot(
+      //     chain.SnapshotRecordMock.address // TODO: should we remove this param? it is being set on setSnapshotContract
+      //   );
+      //   await chain.GovernanceProxy.takeVotePowerSnapshot(chain.SnapshotRecordMock.address);
+      //   await chain.SnapshotRecordMock.setBalanceOfOnPeriod(
+      //     await voter[chainName].getAddress(),
+      //     ethers.utils.parseEther('100'),
+      //     snapshotId1.toString()
+      //   );
+      //   await chain.GovernanceProxy.prepareBallotWithSnapshot(
+      //     chain.SnapshotRecordMock.address,
+      //     await voter[chainName].getAddress()
+      //   );
+      // }
+        const snapshotId1 = await chains.mothership.GovernanceProxy.callStatic.takeVotePowerSnapshot(
+          chains.mothership.SnapshotRecordMock.address // TODO: should we remove this param? it is being set on setSnapshotContract
         );
-        await chain.GovernanceProxy.takeVotePowerSnapshot(chain.SnapshotRecordMock.address);
-        await chain.SnapshotRecordMock.setBalanceOfOnPeriod(
-          await voter[chainName].getAddress(),
+        await chains.mothership.GovernanceProxy.takeVotePowerSnapshot(chains.mothership.SnapshotRecordMock.address);
+        await chains.mothership.SnapshotRecordMock.setBalanceOfOnPeriod(
+          await voter.mothership.getAddress(),
           ethers.utils.parseEther('100'),
           snapshotId1.toString()
         );
-        await chain.GovernanceProxy.prepareBallotWithSnapshot(
-          chain.SnapshotRecordMock.address,
-          await voter[chainName].getAddress()
+        await chains.mothership.GovernanceProxy.prepareBallotWithSnapshot(
+          chains.mothership.SnapshotRecordMock.address,
+          await voter.mothership.getAddress()
         );
-      }
     });
 
     it.only('casts vote on mothership', async function () {
       const { mothership } = chains;
 
-      const code = await mothership.provider.getCode('0x7B1bD7a6b4E61c2a123AC6BC2cbfC614437D0470');
-      console.log('code', code);
-      const bn = await mothership.provider.getBlockNumber();
-      console.log('block number: ', bn);
+      console.log('relayer address: ', await mothership.WormholeRelayerMock.address);
 
-      // const tx = await mothership.GovernanceProxy.connect(voter.mothership).cast(
-      //   [await nominee.mothership.getAddress()],
-      //   [ethers.utils.parseEther('100')],
-      //   // [ethers.utils.parseEther('100')],
-      //   {
-      //     gasLimit: 9000000,
-      //   }
-      // );
-      // await tx.wait();
+      const tx = await mothership.GovernanceProxy.connect(voter.mothership).cast(
+        [await nominee.mothership.getAddress()],
+        [ethers.utils.parseEther('100')],
+        {
+          gasLimit: 9000000,
+        }
+      );
+      await tx.wait();
 
-      // const hasVoted = await mothership.GovernanceProxy.hasVoted(
-      //   await voter.mothership.getAddress(),
-      //   mothership.chainId
-      // );
+      const hasVoted = await mothership.GovernanceProxy.hasVoted(
+        await voter.mothership.getAddress(),
+        mothership.chainId
+      );
 
-      // assert.equal(hasVoted, true);
+      assert.equal(hasVoted, true);
     });
 
     it('casts vote on satellite1', async function () {
@@ -135,6 +155,22 @@ describe('cross chain election testing', function () {
         [ethers.utils.parseEther('100')]
       );
       const rx = await tx.wait();
+
+      let receipt = await tx.wait();
+
+      // // TODO use json abi here
+      // const abi = [ "event LogMessagePublished(address indexed sender, uint64 sequence, uint32 nonce, bytes payload, uint8 consistencyLevel)" ];
+      // const iface = new ethers.utils.Interface(abi);
+      // let event;
+
+      // // Parsing the events from the receipt
+      // receipt.events.forEach((event) => {
+      //   try {
+      //       event = iface.parseLog(event);
+      //       console.log("Parsed Event: ", parsedEvent);
+      //   } catch (error) {
+      //       // Handle the case where the event does not match the ABI
+      //   }
 
       // request delivery from wormhole standard relayer on the mothership chain
 

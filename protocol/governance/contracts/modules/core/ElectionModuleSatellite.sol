@@ -91,6 +91,7 @@ contract ElectionModuleSatellite is
 
         address sender = ERC2771Context._msgSender();
         bytes memory payload;
+        uint256 votingPower;
 
         /// @dev: load ballot with total votingPower, should have been prepared before,
         /// calling the prepareBallotWithSnapshot method
@@ -98,7 +99,7 @@ contract ElectionModuleSatellite is
             uint256 currentEpoch = Council.load().currentElectionId;
 
             Ballot.Data storage ballot = Ballot.load(currentEpoch, sender, block.chainid);
-            uint256 votingPower = ballot.votingPower;
+            votingPower = ballot.votingPower;
             if (votingPower == 0) {
                 revert NoVotingPower(sender, currentEpoch);
             }
@@ -117,14 +118,30 @@ contract ElectionModuleSatellite is
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
         uint16 targetChain = uint16(wh.getChainIdAt(0));
 
-        transmit(
-            wh,
-            targetChain,
-            toAddress(wh.registeredEmitters[targetChain]),
-            payload,
-            msg.value,
-            _CROSSCHAIN_GAS_LIMIT
-        );
+        console.log("chain 1: ", wh.wormholeCore.chainId());
+        console.log("chain 2: ", targetChain);
+        if (wh.wormholeCore.chainId() == targetChain) {
+            console.log("Same chain");
+            // If the target chain is the same as the current chain, we can call the method directly
+            IElectionModule(address(this))._recvCast(
+                Council.load().currentElectionId,
+                sender,
+                votingPower,
+                block.chainid,
+                candidates,
+                amounts
+            );
+        } else {
+            console.log("Not Same chain");
+            transmit(
+                wh,
+                targetChain,
+                toAddress(wh.registeredEmitters[targetChain]),
+                payload,
+                msg.value,
+                _CROSSCHAIN_GAS_LIMIT
+            );
+        }
     }
 
     function withdrawVote(address[] calldata candidates) public payable override {
