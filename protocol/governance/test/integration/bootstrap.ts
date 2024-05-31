@@ -27,12 +27,6 @@ export enum WormholeChainSelector {
   satellite2 = '1',
 }
 
-export enum WormholeRelayers {
-  mothership = '0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a', //sepolia
-  satellite1 = '0x93BAD53DDfB6132b0aC8E37f6029163E63372cEE', //optimistic-sepolia
-  satellite2 = '0xA3cF45939bD6260bcFe3D66bc73d60f19e49a8BB', //avalanche-fuji
-}
-
 export interface SignerOnChains {
   mothership: ethers.Signer;
   satellite1: ethers.Signer;
@@ -106,14 +100,14 @@ before(`setup integration chains`, async function () {
   const councilMembers = await mothership.GovernanceProxy.getCouncilMembers();
   const epochIndex = await mothership.GovernanceProxy.getEpochIndex();
 
+
   const cannonfileSettings = {
     initial_epoch_index: epochIndex,
     initial_epoch_start_date: schedule.startDate,
     initial_nomination_period_start_date: schedule.nominationPeriodStartDate,
     initial_voting_period_start_date: schedule.votingPeriodStartDate,
     initial_epoch_end_date: schedule.endDate,
-    initial_council_member: councilMembers,
-    wormhole_router: WormholeRelayers.mothership,
+    initial_council_member: councilMembers
   };
 
   const [satellite1, satellite2] = await Promise.all([

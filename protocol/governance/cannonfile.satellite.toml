@@ -77,8 +77,8 @@ args = [
     "<%= settings.initial_voting_period_start_date %>",
     "<%= settings.initial_epoch_end_date %>",
     "<%= settings.wormhole_delivery_provider %>",
-    "<%= settings.wormhole_core %>",
-    "<%= settings.wormhole_relayer %>",
+    "<%= contracts.WormholeMock.address %>",
+    "<%= contracts.WormholeRelayerMock.address %>",
     ["<%= settings.initial_council_member %>"],
 ]
 from = "<%= settings.owner %>"

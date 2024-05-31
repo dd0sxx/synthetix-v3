@@ -68,15 +68,18 @@ describe('cross chain election testing', function () {
 
   describe('successful voting on all chains', function () {
     before('prepare snapshot record on all chains', async function () {
-      // for (const chain of typedValues(chains)) {
-      //   await chain.GovernanceProxy.connect(chain.signer).setSnapshotContract(
-      //     chain.SnapshotRecordMock.address,
-      //     true
-      //   );
-      await chains.mothership.GovernanceProxy.connect(chains.mothership.signer).setSnapshotContract(
-        chains.mothership.SnapshotRecordMock.address,
-        true
-      );
+      for (const chain of typedValues(chains)) {
+        await chain.GovernanceProxy.connect(chain.signer).setSnapshotContract(
+          chain.SnapshotRecordMock.address,
+          true
+        );
+      }
+    });
+      // await chains.mothership.GovernanceProxy.connect(chains.mothership.signer).setSnapshotContract(
+      //   chains.mothership.SnapshotRecordMock.address,
+      //   true
+      // );
+
       // await chains.satellite1.GovernanceProxy.connect(chains.satellite1.signer).setSnapshotContract(
       //   chains.satellite1.SnapshotRecordMock.address,
       //   true
@@ -85,7 +88,6 @@ describe('cross chain election testing', function () {
       //   chains.satellite2.SnapshotRecordMock.address,
       //   true
       // );
-    });
 
     before('nominate', async function () {
       await fastForwardToNominationPeriod();
