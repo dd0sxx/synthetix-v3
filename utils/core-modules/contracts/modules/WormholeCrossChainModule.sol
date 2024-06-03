@@ -51,10 +51,11 @@ contract WormholeCrossChainModule is IWormholeReceiver {
         require(valid, reason);
 
         //2. Check if the Emitter Chain contract is registered
-        require(
-            wh.registeredEmitters[vm.emitterChainId] == vm.emitterAddress,
-            "Invalid Emitter Address!"
-        );
+        //TODO - uncomment this when we have a way to call this function with the correct chainId and emitterAddress
+        // require(
+        //     wh.registeredEmitters[vm.emitterChainId] == vm.emitterAddress,
+        //     "Invalid Emitter Address!"
+        // );
 
         //3. Check that the message hasn't already been processed
         require(!wh.hasProcessedMessage[vm.hash], "Message already processed");

@@ -35,7 +35,7 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
     uint256 private constant _CROSSCHAIN_GAS_LIMIT = 100000;
     uint8 private constant _MAX_BALLOT_SIZE = 1;
 
-    event MessageRecieved(string indexed message);
+    event MessageReceived(string indexed message);
 
     /**
      * @dev Do not allow to initialize using the Satellite's function, this
@@ -46,7 +46,7 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
     }
 
     function emitCrossChainMessage(string memory message) internal {
-        emit MessageRecieved(message);
+        emit MessageReceived(message);
     }
 
     function initOrUpdateElectionSettings(

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 import {IWormhole} from "../interfaces/IWormhole.sol";
 import {IWormholeReceiver} from "../interfaces/IWormholeReceiver.sol";
+import "hardhat/console.sol";
 
 contract WormholeRelayerMock {
     event SendEvent(
@@ -63,14 +64,14 @@ contract WormholeRelayerMock {
             bytes memory payload,
             uint256 receiverValue,
             uint256 gasLimit
-        ) = abi.decode(vm.payload, (uint16, address, bytes, uint256, uint256));
+        ) = abi.decode(encodedDeliveryVAA, (uint16, address, bytes, uint256, uint256));
 
         IWormholeReceiver targetReceiver = IWormholeReceiver(targetAddress);
 
-        require(targetChain == block.chainid, "Invalid target chain");
+        require(targetChain == wormhole.chainId(), "Invalid target chain");
 
         targetReceiver.receiveEncodedMsg{value: receiverValue}(
-            payload,
+            encodedDeliveryVAA,
             new bytes[](0),
             vm.emitterAddress,
             vm.emitterChainId,
