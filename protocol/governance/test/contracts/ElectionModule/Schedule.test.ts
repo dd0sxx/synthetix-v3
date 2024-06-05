@@ -130,6 +130,12 @@ describe('ElectionModule - schedule', () => {
 
             it('properly adjusted dates', async function () {
               const schedule = await c.GovernanceProxy.getEpochSchedule();
+              console.log('nominationPeriodStartDate s: ', schedule.nominationPeriodStartDate);
+              console.log('nominationPeriodStartDate: ', newNominationPeriodStartDate);
+              console.log('newVotingPeriodStartDate s: ', schedule.votingPeriodStartDate);
+              console.log('newVotingPeriodStartDate: ', newVotingPeriodStartDate);
+              console.log('newEpochEndDate s: ', schedule.endDate);
+              console.log('newEpochEndDate: ', newEpochEndDate);
               assertBn.near(schedule.nominationPeriodStartDate, newNominationPeriodStartDate, 1);
               assertBn.near(schedule.votingPeriodStartDate, newVotingPeriodStartDate, 1);
               assertBn.near(schedule.endDate, newEpochEndDate, 1);

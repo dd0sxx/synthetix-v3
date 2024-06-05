@@ -79,13 +79,21 @@ contract WormholeCrossChainModule is IWormholeReceiver {
             receiverValue,
             gasLimit
         );
-        sequence = self.wormholeRelayer.sendPayloadToEvm(
-            targetChain,
-            targetAddress,
-            payload,
-            receiverValue,
-            gasLimit
-        );
+        if (targetChain == self.wormholeCore.chainId()) {
+            // If the target chain is the same as the current chain, we can call the method directly
+            address(this).call(payload);
+        } else {
+            // If the target chain is different, we need to send the message to the WormholeRelayer
+            // to be sent to the target chain
+            // require(msg.value >= requiredMsgValue, "Insufficient msg value"
+            sequence = self.wormholeRelayer.sendPayloadToEvm(
+                targetChain,
+                targetAddress,
+                payload,
+                receiverValue,
+                gasLimit
+            );
+        }
     }
 
     /**

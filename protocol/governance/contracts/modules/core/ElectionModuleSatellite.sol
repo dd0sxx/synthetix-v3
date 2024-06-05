@@ -118,30 +118,14 @@ contract ElectionModuleSatellite is
         WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
         uint16 targetChain = uint16(wh.getChainIdAt(0));
 
-        console.log("chain 1: ", wh.wormholeCore.chainId());
-        console.log("chain 2: ", targetChain);
-        if (wh.wormholeCore.chainId() == targetChain) {
-            console.log("Same chain");
-            // If the target chain is the same as the current chain, we can call the method directly
-            IElectionModule(address(this))._recvCast(
-                Council.load().currentElectionId,
-                sender,
-                votingPower,
-                block.chainid,
-                candidates,
-                amounts
-            );
-        } else {
-            console.log("Not Same chain");
-            transmit(
-                wh,
-                targetChain,
-                toAddress(wh.registeredEmitters[targetChain]),
-                payload,
-                msg.value,
-                _CROSSCHAIN_GAS_LIMIT
-            );
-        }
+        transmit(
+            wh,
+            targetChain,
+            toAddress(wh.registeredEmitters[targetChain]),
+            payload,
+            msg.value,
+            _CROSSCHAIN_GAS_LIMIT
+        );
     }
 
     function withdrawVote(address[] calldata candidates) public payable override {

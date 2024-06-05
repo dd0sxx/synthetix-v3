@@ -62,7 +62,7 @@ describe('ElectionModule - Initialization', function () {
 
   describe('when initializing the module', function () {
     describe('with an account that does not own the instance', function () {
-      it.only('reverts', async function () {
+      it('reverts', async function () {
         await assertRevert(_initOrUpdateElectionSettings({ caller: user }), 'Unauthorized');
       });
     });
