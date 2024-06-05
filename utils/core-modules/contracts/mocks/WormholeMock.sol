@@ -35,19 +35,25 @@ contract WormholeMock {
     ) external view returns (IWormhole.VM memory vm, bool valid, string memory reason) {
         (
             uint16 targetChain,
+            uint16 emitterChain,
             address targetAddress,
+            address emitterAddress,
+            uint64 sequence,
             bytes memory payload,
             uint256 receiverValue,
             uint256 gasLimit
-        ) = abi.decode(encodedVM, (uint16, address, bytes, uint256, uint256));
+        ) = abi.decode(
+                encodedVM,
+                (uint16, uint16, address, address, uint64, bytes, uint256, uint256)
+            );
 
         IWormhole.VM memory vmParsed = IWormhole.VM({
             version: 0,
             timestamp: uint32(block.timestamp),
             nonce: 0, // unknown
-            emitterChainId: 0, //unknown
-            emitterAddress: toBytes32(msg.sender),
-            sequence: 0, //unknown
+            emitterChainId: emitterChain, //unknown
+            emitterAddress: toBytes32(emitterAddress),
+            sequence: sequence, //unknown
             consistencyLevel: 1, // we know its 1, but irl it's variable and unknown in this scope
             payload: payload,
             guardianSetIndex: 0,

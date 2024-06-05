@@ -38,7 +38,10 @@ contract WormholeRelayerMock {
     ) external payable returns (uint64 sequence) {
         bytes memory _payload = abi.encode(
             targetChain,
+            wormhole.chainId(),
             targetAddress,
+            msg.sender, // emitterAddress
+            sequence,
             payload,
             receiverValue,
             gasLimit
@@ -54,17 +57,25 @@ contract WormholeRelayerMock {
         bytes memory deliveryOverrides
     ) public payable {
         // Parse and verify VAA containing delivery instructions, revert if invalid
-        (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole.parseAndVerifyVM(
-            encodedDeliveryVAA
-        );
+        (IWormhole.VM memory vm, , ) = wormhole.parseAndVerifyVM(encodedDeliveryVAA);
 
         (
             uint16 targetChain,
+            uint16 emitterChainId,
             address targetAddress,
-            bytes memory payload,
+            address emitterAddress,
+            uint64 sequence,
+            ,
             uint256 receiverValue,
-            uint256 gasLimit
-        ) = abi.decode(encodedDeliveryVAA, (uint16, address, bytes, uint256, uint256));
+
+        ) = abi.decode(
+                encodedDeliveryVAA,
+                (uint16, uint16, address, address, uint64, bytes, uint256, uint256)
+            );
+
+        console.log("emitterAddress: %s", emitterAddress);
+        console.log("emitterChainId: %s", emitterChainId);
+        console.log("sequence: %s", sequence);
 
         IWormholeReceiver targetReceiver = IWormholeReceiver(targetAddress);
 
@@ -73,15 +84,15 @@ contract WormholeRelayerMock {
         targetReceiver.receiveEncodedMsg{value: receiverValue}(
             encodedDeliveryVAA,
             new bytes[](0),
-            vm.emitterAddress,
-            vm.emitterChainId,
+            toBytes32(emitterAddress),
+            emitterChainId,
             vm.hash
         );
 
         emit Delivery(
             targetAddress,
-            vm.emitterChainId,
-            vm.sequence,
+            emitterChainId,
+            sequence,
             vm.hash,
             1,
             0,
@@ -97,5 +108,9 @@ contract WormholeRelayerMock {
         uint256 gasLimit
     ) public view returns (uint256 nativePriceQuote, uint256 targetChainRefundPerGasUnused) {
         return (0, 0);
+    }
+
+    function toBytes32(address _address) internal pure returns (bytes32) {
+        return bytes32(uint256(uint160(_address)));
     }
 }
