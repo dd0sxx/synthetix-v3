@@ -86,6 +86,7 @@ describe('SynthetixElectionModule - Elections', () => {
   describe('when the election module is initialized', async () => {
     epochs.forEach((epoch) => {
       describe(`epoch ${epoch.index}`, () => {
+        //TODO: ask Mati why this should work
         it(`shows that the current epoch index is ${epoch.index}`, async () => {
           assertBn.equal(await chains.mothership.GovernanceProxy.getEpochIndex(), epoch.index);
         });

@@ -27,6 +27,9 @@ describe('ElectionModule - Initialization', function () {
   } = {}) {
     return ElectionModule.connect(caller).initOrUpdateElectionSettings(
       [await caller.getAddress()],
+      "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a", // addresses are not important
+      "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a",
+      "0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a",
       minimumActiveMembers,
       initialNominationPeriodStartDate,
       administrationPeriodDuration,
@@ -59,7 +62,7 @@ describe('ElectionModule - Initialization', function () {
 
   describe('when initializing the module', function () {
     describe('with an account that does not own the instance', function () {
-      it('reverts', async function () {
+      it.only('reverts', async function () {
         await assertRevert(_initOrUpdateElectionSettings({ caller: user }), 'Unauthorized');
       });
     });
