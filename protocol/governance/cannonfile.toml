@@ -1,11 +1,7 @@
 name = "synthetix-governance"
 description = "On-chain voting for synthetix councils"
 version = "<%= package.version %>"
-include = [
-    "./tomls/proxy-base.toml",
-    "./tomls/council-token.toml",
-    "./tomls/wormhole.test.toml"
-]
+include = ["./tomls/proxy-base.toml", "./tomls/council-token.toml"]
 
 [setting.initial_council_member]
 defaultValue = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
@@ -31,9 +27,6 @@ defaultValue = "15" # days
 [contract.AssociatedSystemsModule]
 artifact = "contracts/modules/core/AssociatedSystemsModule.sol:AssociatedSystemsModule"
 
-[contract.CrossChainModule]
-artifact = "contracts/modules/core/CrossChainModule.sol:CrossChainModule"
-
 [contract.ElectionInspectorModule]
 artifact = "contracts/modules/core/ElectionInspectorModule.sol:ElectionInspectorModule"
 
@@ -43,18 +36,13 @@ artifact = "contracts/modules/core/ElectionModule.sol:ElectionModule"
 [contract.SnapshotVotePowerModule]
 artifact = "contracts/modules/core/SnapshotVotePowerModule.sol:SnapshotVotePowerModule"
 
-[contract.CcipReceiverModule]
-artifact = "contracts/modules/core/CcipReceiverModule.sol:CcipReceiverModule"
-
 [router.CoreRouter]
 contracts = [
     "AssociatedSystemsModule",
-    "CrossChainModule",
     "ElectionInspectorModule",
     "ElectionModule",
     "SnapshotVotePowerModule",
     "InitialModuleBundle",
-    "CcipReceiverModule",
 ]
 
 [invoke.upgrade_core_proxy]

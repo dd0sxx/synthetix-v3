@@ -27,17 +27,11 @@ defaultValue = "0"
 [contract.AssociatedSystemsModule]
 artifact = "contracts/modules/core/AssociatedSystemsModule.sol:AssociatedSystemsModule"
 
-[contract.CrossChainModule]
-artifact = "contracts/modules/core/CrossChainModule.sol:CrossChainModule"
-
 [contract.ElectionModuleSatellite]
 artifact = "contracts/modules/core/ElectionModuleSatellite.sol:ElectionModuleSatellite"
 
 [contract.SnapshotVotePowerModule]
 artifact = "contracts/modules/core/SnapshotVotePowerModule.sol:SnapshotVotePowerModule"
-
-[contract.CcipReceiverModule]
-artifact = "contracts/modules/core/CcipReceiverModule.sol:CcipReceiverModule"
 
 [contract.WormholeMock]
 artifact = "contracts/mocks/WormholeMock.sol:WormholeMock"
@@ -50,11 +44,9 @@ args = ["<%= contracts.WormholeMock.address %>"]
 [router.CoreRouter]
 contracts = [
     "AssociatedSystemsModule",
-    "CrossChainModule",
     "ElectionModuleSatellite",
     "SnapshotVotePowerModule",
     "InitialModuleBundle",
-    "CcipReceiverModule"
 ]
 
 [invoke.upgrade_core_proxy]

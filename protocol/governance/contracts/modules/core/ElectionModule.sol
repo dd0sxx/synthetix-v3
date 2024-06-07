@@ -178,20 +178,26 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
 
         uint64[] memory chains = wh.getSupportedNetworks();
         for (uint i = 0; i < chains.length; i++) {
-            transmit(
-                wh,
-                uint16(chains[i]),
-                toAddress(wh.registeredEmitters[uint16(chains[i])]),
-                abi.encodeWithSelector(
-                    this._recvTweakEpochSchedule.selector,
-                    council.currentElectionId,
-                    newEpoch.nominationPeriodStartDate,
-                    newEpoch.votingPeriodStartDate,
-                    newEpoch.endDate
-                ),
-                0,
-                _CROSSCHAIN_GAS_LIMIT
-            );
+            if (chains[i] == uint64(wh.getChainIdAt(0))) {
+                currentEpoch.nominationPeriodStartDate = newNominationPeriodStartDate;
+                currentEpoch.votingPeriodStartDate = newVotingPeriodStartDate;
+                currentEpoch.endDate = newEpochEndDate;
+            } else {
+                transmit(
+                    wh,
+                    uint16(chains[i]),
+                    toAddress(wh.registeredEmitters[uint16(chains[i])]),
+                    abi.encodeWithSelector(
+                        this._recvTweakEpochSchedule.selector,
+                        council.currentElectionId,
+                        newEpoch.nominationPeriodStartDate,
+                        newEpoch.votingPeriodStartDate,
+                        newEpoch.endDate
+                    ),
+                    0,
+                    _CROSSCHAIN_GAS_LIMIT
+                );
+            }
         }
 
         emit EpochScheduleUpdated(

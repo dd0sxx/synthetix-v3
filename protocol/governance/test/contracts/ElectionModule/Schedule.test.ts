@@ -11,13 +11,18 @@ describe('ElectionModule - schedule', () => {
   const { c, getSigners, getProvider, snapshotCheckpoint } = bootstrap();
 
   let user: ethers.Signer;
+  let owner: ethers.Signer;
   let rx: ethers.ContractReceipt;
   let newNominationPeriodStartDate: ethers.BigNumberish;
   let newVotingPeriodStartDate: ethers.BigNumberish;
   let newEpochEndDate: ethers.BigNumberish;
 
   before('identify signers', async () => {
-    [, user] = getSigners();
+    [owner, user] = getSigners();
+  });
+
+  before('register emitters', async function () {
+      await c.GovernanceProxy.connect(owner).setRegisteredEmitters([10002], [c.GovernanceProxy.address]);
   });
 
   // ----------------------------------
@@ -130,12 +135,6 @@ describe('ElectionModule - schedule', () => {
 
             it('properly adjusted dates', async function () {
               const schedule = await c.GovernanceProxy.getEpochSchedule();
-              console.log('nominationPeriodStartDate s: ', schedule.nominationPeriodStartDate);
-              console.log('nominationPeriodStartDate: ', newNominationPeriodStartDate);
-              console.log('newVotingPeriodStartDate s: ', schedule.votingPeriodStartDate);
-              console.log('newVotingPeriodStartDate: ', newVotingPeriodStartDate);
-              console.log('newEpochEndDate s: ', schedule.endDate);
-              console.log('newEpochEndDate: ', newEpochEndDate);
               assertBn.near(schedule.nominationPeriodStartDate, newNominationPeriodStartDate, 1);
               assertBn.near(schedule.votingPeriodStartDate, newVotingPeriodStartDate, 1);
               assertBn.near(schedule.endDate, newEpochEndDate, 1);
