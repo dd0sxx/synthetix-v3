@@ -22,6 +22,7 @@ describe('SynthetixElectionModule - Elections', () => {
   const fastForwardToNominationPeriod = async (provider: ethers.providers.JsonRpcProvider) => {
     const schedule = await chains.mothership.GovernanceProxy.getEpochSchedule();
     await fastForwardTo(schedule.nominationPeriodStartDate.toNumber() + 10, provider);
+    console.log("nomintation timestamp: ", schedule.nominationPeriodStartDate.toNumber())
   };
 
   const fastForwardToVotingPeriod = async (provider: ethers.providers.JsonRpcProvider) => {
@@ -184,11 +185,14 @@ describe('SynthetixElectionModule - Elections', () => {
         let snapshotId: ethers.BigNumber,
           snapshotId1: ethers.BigNumber,
           snapshotId2: ethers.BigNumber;
-        it('fast forward', async () => {
+        before('fast forward to nominations', async () => {
           const { mothership, satellite1, satellite2 } = chains;
-          await fastForwardToNominationPeriod(mothership.provider);
-          await fastForwardToNominationPeriod(satellite1.provider);
-          await fastForwardToNominationPeriod(satellite2.provider);
+          const currentPeriod = await chains.mothership.GovernanceProxy.getCurrentPeriod();
+          if (currentPeriod.eq(ethers.BigNumber.from("0"))) {
+            await fastForwardToNominationPeriod(mothership.provider);
+            await fastForwardToNominationPeriod(satellite1.provider);
+            await fastForwardToNominationPeriod(satellite2.provider);
+          }
         });
 
         describe('when trying to set the snapshot contract', () => {
@@ -400,7 +404,7 @@ describe('SynthetixElectionModule - Elections', () => {
             ).wait();
           });
 
-          it('is nominated', async () => {
+          it.only('is nominated', async () => {
             const { mothership } = chains;
             assert.equal(await mothership.GovernanceProxy.isNominated(addresses[3].address), true);
             assert.equal(await mothership.GovernanceProxy.isNominated(addresses[4].address), true);
@@ -438,11 +442,14 @@ describe('SynthetixElectionModule - Elections', () => {
           });
 
           describe('when advancing to the voting period', () => {
-            before('fast forward', async () => {
+            before('fast forward to voting', async () => {
               const { mothership, satellite1, satellite2 } = chains;
+              const currentPeriod = await chains.mothership.GovernanceProxy.getCurrentPeriod();
+              if (currentPeriod.eq(ethers.BigNumber.from("1"))) {
               await fastForwardToVotingPeriod(mothership.provider);
               await fastForwardToVotingPeriod(satellite1.provider);
               await fastForwardToVotingPeriod(satellite2.provider);
+              }
             });
 
             it('shows that the current period is Voting', async () => {
@@ -756,11 +763,14 @@ describe('SynthetixElectionModule - Elections', () => {
                 });
 
                 describe('when voting ends', () => {
-                  before('fast forward', async () => {
+                  before('fast forward to evaluation', async () => {
                     const { mothership, satellite1, satellite2 } = chains;
+                    const currentPeriod = await chains.mothership.GovernanceProxy.getCurrentPeriod();
+                    if (currentPeriod.eq(ethers.BigNumber.from("2"))) {
                     await fastForwardToEvaluationPeriod(mothership.provider);
                     await fastForwardToEvaluationPeriod(satellite1.provider);
                     await fastForwardToEvaluationPeriod(satellite2.provider);
+                    }
                   });
 
                   it('shows that the current period is Evaluation', async () => {

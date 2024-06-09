@@ -87,6 +87,7 @@ library Council {
         Epoch.ElectionPeriod period2
     ) internal view {
         Epoch.ElectionPeriod currentPeriod = getCurrentEpoch(load()).getCurrentPeriod();
+        console.log("currentPeriod: %s", uint8(currentPeriod));
         if (currentPeriod != period1 && currentPeriod != period2) {
             revert NotCallableInCurrentPeriod();
         }
