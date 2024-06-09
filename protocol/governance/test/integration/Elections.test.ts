@@ -404,7 +404,7 @@ describe('SynthetixElectionModule - Elections', () => {
             ).wait();
           });
 
-          it.only('is nominated', async () => {
+          it('is nominated', async () => {
             const { mothership } = chains;
             assert.equal(await mothership.GovernanceProxy.isNominated(addresses[3].address), true);
             assert.equal(await mothership.GovernanceProxy.isNominated(addresses[4].address), true);
