@@ -88,7 +88,7 @@ contract ElectionModuleSatellite is
         {
             Council.onlyInPeriod(Epoch.ElectionPeriod.Vote);
         }
-
+        console.log("reaches here");
         address sender = ERC2771Context._msgSender();
         bytes memory payload;
         uint256 votingPower;

@@ -42,6 +42,10 @@ describe('ElectionModule - Initialization', function () {
     [owner, user] = getSigners();
   });
 
+  before('register emitters', async function () {
+    await c.GovernanceProxy.connect(owner).setRegisteredEmitters([10002], [c.GovernanceProxy.address]);
+});
+
   before('deploy uninitialized module', async function () {
     ElectionModule = await deployNewProxy();
 

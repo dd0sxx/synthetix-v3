@@ -7,11 +7,16 @@ import { bootstrap } from '../../bootstrap';
 describe('ElectionModule - voting', function () {
   const { c, getSigners, getProvider } = bootstrap();
 
+  let owner: ethers.Signer;
   let user: ethers.Signer;
   let otherUser: ethers.Signer;
 
   before('identify signers', async function () {
-    [, user, otherUser] = getSigners();
+    [owner, user, otherUser] = getSigners();
+  });
+
+  before('register emitters', async function () {
+    await c.GovernanceProxy.connect(owner).setRegisteredEmitters([10002], [c.GovernanceProxy.address]);
   });
 
   before('create voting power for user', async function () {
@@ -37,7 +42,7 @@ describe('ElectionModule - voting', function () {
         const schedule = await c.GovernanceProxy.getEpochSchedule();
         await fastForwardTo(Number(schedule.votingPeriodStartDate), getProvider());
       });
-
+      //TODO - weirdly not reverting here, logs not working in contracts
       it('reverts if ballot has too many candidates', async function () {
         const candidates = [
           ethers.Wallet.createRandom().address,

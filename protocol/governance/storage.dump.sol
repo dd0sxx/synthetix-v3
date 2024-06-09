@@ -185,23 +185,6 @@ library AssociatedSystem {
     }
 }
 
-// @custom:artifact @synthetixio/core-modules/contracts/storage/CrossChain.sol:CrossChain
-library CrossChain {
-    bytes32 private constant _SLOT_CROSS_CHAIN = keccak256(abi.encode("io.synthetix.core-modules.CrossChain"));
-    struct Data {
-        address ccipRouter;
-        SetUtil.UintSet supportedNetworks;
-        mapping(uint64 => uint64) ccipChainIdToSelector;
-        mapping(uint64 => uint64) ccipSelectorToChainId;
-    }
-    function load() internal pure returns (Data storage crossChain) {
-        bytes32 s = _SLOT_CROSS_CHAIN;
-        assembly {
-            crossChain.slot := s
-        }
-    }
-}
-
 // @custom:artifact @synthetixio/core-modules/contracts/storage/Initialized.sol:Initialized
 library Initialized {
     struct Data {
@@ -234,33 +217,6 @@ library WormholeCrossChain {
     }
 }
 
-// @custom:artifact @synthetixio/core-modules/contracts/utils/CcipClient.sol:CcipClient
-library CcipClient {
-    bytes4 public constant EVM_EXTRA_ARGS_V1_TAG = 0x97a657c9;
-    struct EVMTokenAmount {
-        address token;
-        uint256 amount;
-    }
-    struct Any2EVMMessage {
-        bytes32 messageId;
-        uint64 sourceChainSelector;
-        bytes sender;
-        bytes data;
-        EVMTokenAmount[] tokenAmounts;
-    }
-    struct EVM2AnyMessage {
-        bytes receiver;
-        bytes data;
-        EVMTokenAmount[] tokenAmounts;
-        address feeToken;
-        bytes extraArgs;
-    }
-    struct EVMExtraArgsV1 {
-        uint256 gasLimit;
-        bool strict;
-    }
-}
-
 // @custom:artifact contracts/modules/core/ElectionModule.sol:ElectionModule
 contract ElectionModule {
     uint256 private constant _CROSSCHAIN_GAS_LIMIT = 100000;
@@ -269,17 +225,6 @@ contract ElectionModule {
 
 // @custom:artifact contracts/modules/core/ElectionModuleSatellite.sol:ElectionModuleSatellite
 contract ElectionModuleSatellite {
-    uint256 private constant _CROSSCHAIN_GAS_LIMIT = 100000;
-}
-
-// @custom:artifact contracts/modules/core/WormholeElectionModule.sol:WormholeElectionModule
-contract WormholeElectionModule {
-    uint256 private constant _CROSSCHAIN_GAS_LIMIT = 100000;
-    uint8 private constant _MAX_BALLOT_SIZE = 1;
-}
-
-// @custom:artifact contracts/modules/core/WormholeElectionModuleSatelite.sol:WormholeElectionModuleSatellite
-contract WormholeElectionModuleSatellite {
     uint256 private constant _CROSSCHAIN_GAS_LIMIT = 100000;
 }
 

@@ -20,7 +20,7 @@ describe('cross chain election testing', function () {
     await fastForwardChainsTo(schedule.votingPeriodStartDate.toNumber() + 10);
   };
 
-  const deliverCrossChainMessage = async (tx, emitterAddress, emitterChainId) => {
+  const deliverCrossChainCast = async (tx, emitterAddress, emitterChainId) => {
     let receipt = await tx.wait();
 
       // TODO use json abi here
@@ -163,7 +163,7 @@ describe('cross chain election testing', function () {
         [ethers.utils.parseEther('100')]
       );
 
-      await deliverCrossChainMessage(tx, await chains.satellite1.GovernanceProxy.address, chains.satellite1.chainId);
+      await deliverCrossChainCast(tx, await chains.satellite1.GovernanceProxy.address, chains.satellite1.chainId);
 
       const hasVoted = await mothership.GovernanceProxy.hasVoted(
         await voter.satellite1.getAddress(),
@@ -181,7 +181,7 @@ describe('cross chain election testing', function () {
         [ethers.utils.parseEther('100')]
       );
 
-     await deliverCrossChainMessage(tx, chains.satellite2.GovernanceProxy.address, chains.satellite2.chainId);
+     await deliverCrossChainCast(tx, chains.satellite2.GovernanceProxy.address, chains.satellite2.chainId);
 
       const hasVoted = await mothership.GovernanceProxy.hasVoted(
         await voter.satellite2.getAddress(),
