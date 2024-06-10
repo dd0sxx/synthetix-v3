@@ -21,7 +21,7 @@ const chains = [
     networkName: 'optimistic-goerli',
     cannonfile: 'cannonfile.satellite.test.toml',
     chainSelector: '2664363617261496610',
-  }
+  },
 ] as const;
 
 task('dev', 'spins up locally 2 nodes ready for test purposes')

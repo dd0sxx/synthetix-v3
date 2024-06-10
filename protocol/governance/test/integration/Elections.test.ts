@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
-import { ccipReceive } from '@synthetixio/core-modules/test/helpers/ccip';
 import assertBn from '@synthetixio/core-utils/utils/assertions/assert-bignumber';
 import assertEvent from '@synthetixio/core-utils/utils/assertions/assert-event';
 import assertRevert from '@synthetixio/core-utils/utils/assertions/assert-revert';
 import { fastForwardTo } from '@synthetixio/core-utils/utils/hardhat/rpc';
 import { ethers } from 'ethers';
 import { ElectionPeriod } from '../constants';
-import { ChainSelector, integrationBootstrap } from './bootstrap';
+import { typedValues } from '../helpers/object';
+import { integrationBootstrap, WormholeChainSelector } from './bootstrap';
 
 function generateRandomAddresses() {
   const wallets = [];
@@ -22,7 +22,7 @@ describe('SynthetixElectionModule - Elections', () => {
   const fastForwardToNominationPeriod = async (provider: ethers.providers.JsonRpcProvider) => {
     const schedule = await chains.mothership.GovernanceProxy.getEpochSchedule();
     await fastForwardTo(schedule.nominationPeriodStartDate.toNumber() + 10, provider);
-    console.log("nomintation timestamp: ", schedule.nominationPeriodStartDate.toNumber())
+    console.log('nomintation timestamp: ', schedule.nominationPeriodStartDate.toNumber());
   };
 
   const fastForwardToVotingPeriod = async (provider: ethers.providers.JsonRpcProvider) => {
@@ -55,6 +55,59 @@ describe('SynthetixElectionModule - Elections', () => {
     },
   ];
 
+  const deliverResolve = async (rx) => {
+    // TODO use json abi here
+    const abi = [
+      'event LogMessagePublished(address indexed sender, uint64 sequence, uint32 nonce, bytes payload, uint8 consistencyLevel)',
+    ];
+    const iface = new ethers.utils.Interface(abi);
+    let events = [];
+
+    console.log('in deliver revolve: ', rx.events.length);
+
+    // Parsing the events from the receipt
+    rx.events.forEach((_event, i) => {
+      console.log('event: ', _event);
+      try {
+        events.push(iface.parseLog(_event));
+        console.log('event: ', events[i].args);
+      } catch (error) {
+        // Handle the case where the event does not match the ABI
+      }
+    });
+
+    const encodedValue1 = ethers.utils.defaultAbiCoder.encode(
+      ['address', 'uint16', 'uint64'], // Types
+      [
+        chains.mothership.GovernanceProxy.address,
+        WormholeChainSelector.mothership,
+        events[0]?.args?.sequence,
+      ] // Values
+    );
+    const encodedValue2 = ethers.utils.defaultAbiCoder.encode(
+      ['address', 'uint16', 'uint64'], // Types
+      [
+        chains.mothership.GovernanceProxy.address,
+        WormholeChainSelector.mothership,
+        events[1]?.args?.sequence,
+      ] // Values
+    );
+
+    // request delivery from wormhole standard relayer on the satellite chains
+    await chains.satellite1.WormholeRelayerMock.deliver(
+      [encodedValue1],
+      events[0]?.args?.payload,
+      await chains.satellite1.GovernanceProxy.address,
+      []
+    );
+    await chains.satellite2.WormholeRelayerMock.deliver(
+      [encodedValue2],
+      events[1]?.args?.payload,
+      await chains.satellite2.GovernanceProxy.address,
+      []
+    );
+  };
+
   before('set snapshot contract', async () => {
     const { mothership, satellite1, satellite2 } = chains;
     await mothership.GovernanceProxy.setSnapshotContract(
@@ -71,11 +124,20 @@ describe('SynthetixElectionModule - Elections', () => {
     );
   });
 
-
   before('register emitters', async function () {
-    await chains.mothership.GovernanceProxy.connect(chains.mothership.signer).setRegisteredEmitters([13370], [chains.mothership.GovernanceProxy.address]);
-    await chains.satellite1.GovernanceProxy.connect(chains.satellite1.signer).setRegisteredEmitters([10005], [chains.satellite1.GovernanceProxy.address]);
-    await chains.satellite2.GovernanceProxy.connect(chains.satellite2.signer).setRegisteredEmitters([1], [chains.satellite2.GovernanceProxy.address]);
+    for (const chain of typedValues(chains)) {
+      const _chains = [
+        WormholeChainSelector.mothership,
+        WormholeChainSelector.satellite1,
+        WormholeChainSelector.satellite2,
+      ];
+      const _emitters = [
+        chains.mothership.GovernanceProxy.address,
+        chains.satellite1.GovernanceProxy.address,
+        chains.satellite2.GovernanceProxy.address,
+      ];
+      await chain.GovernanceProxy.connect(chain.signer).setRegisteredEmitters(_chains, _emitters);
+    }
   });
 
   before('fund addresses', async () => {
@@ -188,7 +250,7 @@ describe('SynthetixElectionModule - Elections', () => {
         before('fast forward to nominations', async () => {
           const { mothership, satellite1, satellite2 } = chains;
           const currentPeriod = await chains.mothership.GovernanceProxy.getCurrentPeriod();
-          if (currentPeriod.eq(ethers.BigNumber.from("0"))) {
+          if (currentPeriod.eq(ethers.BigNumber.from('0'))) {
             await fastForwardToNominationPeriod(mothership.provider);
             await fastForwardToNominationPeriod(satellite1.provider);
             await fastForwardToNominationPeriod(satellite2.provider);
@@ -444,10 +506,10 @@ describe('SynthetixElectionModule - Elections', () => {
             before('fast forward to voting', async () => {
               const { mothership, satellite1, satellite2 } = chains;
               const currentPeriod = await chains.mothership.GovernanceProxy.getCurrentPeriod();
-              if (currentPeriod.eq(ethers.BigNumber.from("1"))) {
-              await fastForwardToVotingPeriod(mothership.provider);
-              await fastForwardToVotingPeriod(satellite1.provider);
-              await fastForwardToVotingPeriod(satellite2.provider);
+              if (currentPeriod.eq(ethers.BigNumber.from('1'))) {
+                await fastForwardToVotingPeriod(mothership.provider);
+                await fastForwardToVotingPeriod(satellite1.provider);
+                await fastForwardToVotingPeriod(satellite2.provider);
               }
             });
 
@@ -764,11 +826,12 @@ describe('SynthetixElectionModule - Elections', () => {
                 describe('when voting ends', () => {
                   before('fast forward to evaluation', async () => {
                     const { mothership, satellite1, satellite2 } = chains;
-                    const currentPeriod = await chains.mothership.GovernanceProxy.getCurrentPeriod();
-                    if (currentPeriod.eq(ethers.BigNumber.from("2"))) {
-                    await fastForwardToEvaluationPeriod(mothership.provider);
-                    await fastForwardToEvaluationPeriod(satellite1.provider);
-                    await fastForwardToEvaluationPeriod(satellite2.provider);
+                    const currentPeriod =
+                      await chains.mothership.GovernanceProxy.getCurrentPeriod();
+                    if (currentPeriod.eq(ethers.BigNumber.from('2'))) {
+                      await fastForwardToEvaluationPeriod(mothership.provider);
+                      await fastForwardToEvaluationPeriod(satellite1.provider);
+                      await fastForwardToEvaluationPeriod(satellite2.provider);
                     }
                   });
 
@@ -819,21 +882,7 @@ describe('SynthetixElectionModule - Elections', () => {
                           })
                         ).wait();
 
-                        await ccipReceive({
-                          rx,
-                          ccipAddress: satellite1.CcipRouter.address,
-                          sourceChainSelector: ChainSelector.mothership,
-                          targetSigner: satellite1.signer,
-                          index: 0,
-                        });
-
-                        await ccipReceive({
-                          rx,
-                          ccipAddress: satellite2.CcipRouter.address,
-                          sourceChainSelector: ChainSelector.mothership,
-                          targetSigner: satellite2.signer,
-                          index: 1,
-                        });
+                        await deliverResolve(rx);
                       });
 
                       it('shows the expected NFT owners', async () => {

@@ -12,7 +12,10 @@ describe('Evaluation', function () {
   };
 
   before('register emitters', async function () {
-    await chains.mothership.GovernanceProxy.connect(chains.mothership.signer).setRegisteredEmitters([13370], [chains.mothership.GovernanceProxy.address]);
+    await chains.mothership.GovernanceProxy.connect(chains.mothership.signer).setRegisteredEmitters(
+      [13370],
+      [chains.mothership.GovernanceProxy.address]
+    );
   });
 
   describe('no nominees', () => {
@@ -23,7 +26,7 @@ describe('Evaluation', function () {
       await fastForwardToEvaluationPeriod(mothership.provider);
       assert.equal((await mothership.GovernanceProxy.getCurrentPeriod()).toNumber(), 3);
 
-      await mothership.GovernanceProxy.evaluate(0)
+      await mothership.GovernanceProxy.evaluate(0);
 
       // await ccipReceive({
       //   ccipAddress: satellite1.CcipRouter.address,

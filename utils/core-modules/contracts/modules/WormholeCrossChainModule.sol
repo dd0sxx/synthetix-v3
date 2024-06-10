@@ -90,6 +90,7 @@ contract WormholeCrossChainModule is IWormholeReceiver {
                 }
             }
         } else {
+            console.log("sending message to: ", targetChain);
             // If the target chain is different, we need to send the message to the WormholeRelayer
             // to be sent to the target chain
             // require(msg.value >= requiredMsgValue, "Insufficient msg value"

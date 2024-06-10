@@ -22,7 +22,10 @@ describe('ElectionModule - schedule', () => {
   });
 
   before('register emitters', async function () {
-      await c.GovernanceProxy.connect(owner).setRegisteredEmitters([13370], [c.GovernanceProxy.address]);
+    await c.GovernanceProxy.connect(owner).setRegisteredEmitters(
+      [13370],
+      [c.GovernanceProxy.address]
+    );
   });
 
   // ----------------------------------

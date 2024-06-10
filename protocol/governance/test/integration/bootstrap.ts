@@ -100,14 +100,13 @@ before(`setup integration chains`, async function () {
   const councilMembers = await mothership.GovernanceProxy.getCouncilMembers();
   const epochIndex = await mothership.GovernanceProxy.getEpochIndex();
 
-
   const cannonfileSettings = {
     initial_epoch_index: epochIndex,
     initial_epoch_start_date: schedule.startDate,
     initial_nomination_period_start_date: schedule.nominationPeriodStartDate,
     initial_voting_period_start_date: schedule.votingPeriodStartDate,
     initial_epoch_end_date: schedule.endDate,
-    initial_council_member: councilMembers
+    initial_council_member: councilMembers,
   };
 
   const [satellite1, satellite2] = await Promise.all([

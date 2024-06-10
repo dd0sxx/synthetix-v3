@@ -16,7 +16,10 @@ describe('ElectionModule - voting', function () {
   });
 
   before('register emitters', async function () {
-    await c.GovernanceProxy.connect(owner).setRegisteredEmitters([13370], [c.GovernanceProxy.address]);
+    await c.GovernanceProxy.connect(owner).setRegisteredEmitters(
+      [13370],
+      [c.GovernanceProxy.address]
+    );
   });
 
   before('create voting power for user', async function () {

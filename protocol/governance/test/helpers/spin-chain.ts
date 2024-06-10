@@ -54,18 +54,18 @@ export async function spinChain<GovernanceProxy>({
     projectDirectory: hre.config.paths.root,
   });
 
-  console.log("after cannonBuild")
-  
+  console.log('after cannonBuild');
+
   await cannonInspect({
     chainId,
     packageRef,
     writeDeployments,
   });
 
-  console.log("after cannonInspect")
-  
+  console.log('after cannonInspect');
+
   const allFiles = glob(hre.config.paths.root, [`${writeDeployments}/**/*.json`]);
-  
+
   await runTypeChain({
     cwd: hre.config.paths.root,
     filesToProcess: allFiles,
@@ -73,8 +73,8 @@ export async function spinChain<GovernanceProxy>({
     target: 'ethers-v5',
     outDir: typechainFolder,
   });
-  
-  console.log("after runTypeChain")
+
+  console.log('after runTypeChain');
 
   const signer = provider.getSigner(ownerAddress);
 
@@ -107,7 +107,6 @@ export async function spinChain<GovernanceProxy>({
     outputs.contracts!.WormholeRelayerMock.abi,
     signer
   ) as WormholeRelayerMock;
-
 
   const CouncilToken = new ethers.Contract(
     outputs.contracts!.CouncilToken.address,

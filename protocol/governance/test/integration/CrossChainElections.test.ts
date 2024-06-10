@@ -1,11 +1,10 @@
-import { ccipReceive } from '@synthetixio/core-modules/test/helpers/ccip';
 import assertBn from '@synthetixio/core-utils/utils/assertions/assert-bignumber';
 import assertRevert from '@synthetixio/core-utils/utils/assertions/assert-revert';
 import assert from 'assert';
 import { ethers } from 'ethers';
 import { ElectionPeriod } from '../constants';
 import { typedEntries, typedValues } from '../helpers/object';
-import { ChainSelector, integrationBootstrap, SignerOnChains, WormholeChainSelector } from './bootstrap';
+import { integrationBootstrap, SignerOnChains, WormholeChainSelector } from './bootstrap';
 
 describe('cross chain election testing', function () {
   const { chains, fixtureSignerOnChains, fastForwardChainsTo } = integrationBootstrap();
@@ -23,34 +22,36 @@ describe('cross chain election testing', function () {
   const deliverCrossChainCast = async (tx, emitterAddress, emitterChainId) => {
     let receipt = await tx.wait();
 
-      // TODO use json abi here
-      const abi = [ "event LogMessagePublished(address indexed sender, uint64 sequence, uint32 nonce, bytes payload, uint8 consistencyLevel)" ];
-      const iface = new ethers.utils.Interface(abi);
-      let event;
+    // TODO use json abi here
+    const abi = [
+      'event LogMessagePublished(address indexed sender, uint64 sequence, uint32 nonce, bytes payload, uint8 consistencyLevel)',
+    ];
+    const iface = new ethers.utils.Interface(abi);
+    let event;
 
-      // Parsing the events from the receipt
-      receipt.events.forEach((_event) => {
-        try {
-          event = iface.parseLog(_event);
-          console.log('event: ', event.args);
-        } catch (error) {
-            // Handle the case where the event does not match the ABI
-        }
-      });
+    // Parsing the events from the receipt
+    receipt.events.forEach((_event) => {
+      try {
+        event = iface.parseLog(_event);
+        console.log('event: ', event.args);
+      } catch (error) {
+        // Handle the case where the event does not match the ABI
+      }
+    });
 
-      const encodedValue = ethers.utils.defaultAbiCoder.encode(
-        ["address", "uint16", "uint64"], // Types
-        [emitterAddress, emitterChainId,  event?.args?.sequence] // Values
+    const encodedValue = ethers.utils.defaultAbiCoder.encode(
+      ['address', 'uint16', 'uint64'], // Types
+      [emitterAddress, emitterChainId, event?.args?.sequence] // Values
     );
 
-      // request delivery from wormhole standard relayer on the mothership chain
-      await chains.mothership.WormholeRelayerMock.deliver(
-        [encodedValue],
-        event?.args?.payload,
-        await voter.satellite1.getAddress(),
-        []
-      );
-  }
+    // request delivery from wormhole standard relayer on the mothership chain
+    await chains.mothership.WormholeRelayerMock.deliver(
+      [encodedValue],
+      event?.args?.payload,
+      await voter.satellite1.getAddress(),
+      []
+    );
+  };
 
   let nominee: SignerOnChains;
   let voter: SignerOnChains;
@@ -62,8 +63,16 @@ describe('cross chain election testing', function () {
 
   before('register emitters', async function () {
     for (const chain of typedValues(chains)) {
-      const _chains = [WormholeChainSelector.mothership, WormholeChainSelector.satellite1, WormholeChainSelector.satellite2];
-      const _emitters = [chains.mothership.GovernanceProxy.address, chains.satellite1.GovernanceProxy.address, chains.satellite2.GovernanceProxy.address];
+      const _chains = [
+        WormholeChainSelector.mothership,
+        WormholeChainSelector.satellite1,
+        WormholeChainSelector.satellite2,
+      ];
+      const _emitters = [
+        chains.mothership.GovernanceProxy.address,
+        chains.satellite1.GovernanceProxy.address,
+        chains.satellite2.GovernanceProxy.address,
+      ];
       await chain.GovernanceProxy.connect(chain.signer).setRegisteredEmitters(_chains, _emitters);
     }
   });
@@ -163,7 +172,11 @@ describe('cross chain election testing', function () {
         [ethers.utils.parseEther('100')]
       );
 
-      await deliverCrossChainCast(tx, await chains.satellite1.GovernanceProxy.address, chains.satellite1.chainId);
+      await deliverCrossChainCast(
+        tx,
+        await chains.satellite1.GovernanceProxy.address,
+        chains.satellite1.chainId
+      );
 
       const hasVoted = await mothership.GovernanceProxy.hasVoted(
         await voter.satellite1.getAddress(),
@@ -181,7 +194,11 @@ describe('cross chain election testing', function () {
         [ethers.utils.parseEther('100')]
       );
 
-     await deliverCrossChainCast(tx, chains.satellite2.GovernanceProxy.address, chains.satellite2.chainId);
+      await deliverCrossChainCast(
+        tx,
+        chains.satellite2.GovernanceProxy.address,
+        chains.satellite2.chainId
+      );
 
       const hasVoted = await mothership.GovernanceProxy.hasVoted(
         await voter.satellite2.getAddress(),
