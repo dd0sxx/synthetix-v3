@@ -73,7 +73,7 @@ describe('SynthetixElectionModule - Elections', () => {
 
 
   before('register emitters', async function () {
-    await chains.mothership.GovernanceProxy.connect(chains.mothership.signer).setRegisteredEmitters([10002], [chains.mothership.GovernanceProxy.address]);
+    await chains.mothership.GovernanceProxy.connect(chains.mothership.signer).setRegisteredEmitters([13370], [chains.mothership.GovernanceProxy.address]);
     await chains.satellite1.GovernanceProxy.connect(chains.satellite1.signer).setRegisteredEmitters([10005], [chains.satellite1.GovernanceProxy.address]);
     await chains.satellite2.GovernanceProxy.connect(chains.satellite2.signer).setRegisteredEmitters([1], [chains.satellite2.GovernanceProxy.address]);
   });
@@ -366,7 +366,6 @@ describe('SynthetixElectionModule - Elections', () => {
         describe('when cross chain debt share data is collected', () => {
           before('nominate', async () => {
             const { mothership } = chains;
-
             await (
               await mothership.GovernanceProxy.connect(
                 addresses[1].connect(mothership.provider)

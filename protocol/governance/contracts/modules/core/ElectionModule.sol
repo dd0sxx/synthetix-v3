@@ -304,7 +304,6 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
         console.log("Received cast");
         WormholeCrossChain.onlyCrossChain();
         Council.onlyInPeriod(Epoch.ElectionPeriod.Vote);
-
         if (candidates.length > _MAX_BALLOT_SIZE) {
             revert ParameterError.InvalidParameter("candidates", "too many candidates");
         }

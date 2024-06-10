@@ -24,9 +24,10 @@ artifact = "contracts/generated/test/TestableElectionStorage.sol:TestableElectio
 [contract.TestableEpochStorage]
 artifact = "contracts/generated/test/TestableEpochStorage.sol:TestableEpochStorage"
 
+#TODO use create 2 and hardcode the contract addresses as settings
 [contract.WormholeMock]
 artifact = "contracts/mocks/WormholeMock.sol:WormholeMock"
-args = ["10002"]
+args = ["13370"]
 
 [contract.WormholeRelayerMock]
 artifact = "contracts/mocks/WormholeRelayerMock.sol:WormholeRelayerMock"

@@ -16,7 +16,7 @@ describe('ElectionModule - voting', function () {
   });
 
   before('register emitters', async function () {
-    await c.GovernanceProxy.connect(owner).setRegisteredEmitters([10002], [c.GovernanceProxy.address]);
+    await c.GovernanceProxy.connect(owner).setRegisteredEmitters([13370], [c.GovernanceProxy.address]);
   });
 
   before('create voting power for user', async function () {
@@ -69,7 +69,7 @@ describe('ElectionModule - voting', function () {
         before('nominate user', async function () {
           await c.GovernanceProxy.connect(user).nominate();
         });
-
+        //TODO
         it('reverts if ballot voting power does not match', async function () {
           await assertRevert(
             c.GovernanceProxy.connect(user).cast([await user.getAddress()], [1]),

@@ -79,11 +79,16 @@ contract WormholeCrossChainModule is IWormholeReceiver {
             receiverValue,
             gasLimit
         );
-        console.log("reaches here");
         if (targetChain == self.wormholeCore.chainId()) {
-            console.log("reaches here 2");
             // If the target chain is the same as the current chain, we can call the method directly
-            address(this).call(payload);
+            (bool success, bytes memory result) = address(this).call(payload);
+            console.log("is this code reachable");
+            if (!success) {
+                uint256 len = result.length;
+                assembly {
+                    revert(add(result, 0x20), len)
+                }
+            }
         } else {
             // If the target chain is different, we need to send the message to the WormholeRelayer
             // to be sent to the target chain

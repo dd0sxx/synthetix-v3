@@ -1,0 +1,9 @@
+name = "synthetix-governance"
+version = "<%= package.version %>"
+include = ["cannonfile.toml"]
+
+[setting.wormholeAddress]
+defaultValue = ""
+
+[setting.wormholeRelayerAddress]
+defaultValue = ""

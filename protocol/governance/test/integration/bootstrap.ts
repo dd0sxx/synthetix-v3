@@ -22,7 +22,7 @@ export enum ChainSelector {
 }
 
 export enum WormholeChainSelector {
-  mothership = '10002',
+  mothership = '13370',
   satellite1 = '10005',
   satellite2 = '1',
 }
