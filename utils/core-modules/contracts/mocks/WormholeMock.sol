@@ -26,7 +26,7 @@ contract WormholeMock {
         bytes memory payload,
         uint8 consistencyLevel
     ) external payable returns (uint64 sequence) {
-        sequence = sequences[msg.sender]++; //TODO should this be tx.origin instead of msg.sender?
+        sequence = sequences[msg.sender]++;
         emit LogMessagePublished(msg.sender, sequence, nonce, payload, consistencyLevel);
     }
 

@@ -174,7 +174,6 @@ describe('ElectionSchedule', function () {
       });
     });
 
-    // TODO: fix weird error, running this tests breaks another ones
     describe.skip('when calling it outside of Administration period', function () {
       let schedule: ScheduleConfig;
 
