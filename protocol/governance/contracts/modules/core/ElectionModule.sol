@@ -8,7 +8,6 @@ import {SetUtil} from "@synthetixio/core-contracts/contracts/utils/SetUtil.sol";
 import {OwnableStorage} from "@synthetixio/core-contracts/contracts/ownership/OwnableStorage.sol";
 import {WormholeCrossChain} from "@synthetixio/core-modules/contracts/storage/WormholeCrossChain.sol";
 import {IElectionModule} from "../../interfaces/IElectionModule.sol";
-import {IDeliveryProvider} from "@synthetixio/core-modules/contracts/interfaces/IDeliveryProvider.sol";
 import {IWormhole} from "@synthetixio/core-modules/contracts/interfaces/IWormhole.sol";
 import {IWormholeRelayer} from "@synthetixio/core-modules/contracts/interfaces/IWormholeRelayer.sol";
 import {ElectionTally} from "../../submodules/election/ElectionTally.sol";
@@ -51,7 +50,6 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
 
     function initOrUpdateElectionSettings(
         address[] memory initialCouncil,
-        IDeliveryProvider wormholeDeliveryProvider,
         IWormhole wormholeCore,
         IWormholeRelayer wormholeRelayer,
         uint8 minimumActiveMembers,
@@ -78,7 +76,6 @@ contract ElectionModule is IElectionModule, ElectionModuleSatellite, ElectionTal
             WormholeCrossChain.Data storage wh = WormholeCrossChain.load();
             wh.wormholeCore = wormholeCore;
             wh.wormholeRelayer = wormholeRelayer;
-            wh.wormholeDeliveryProvider = wormholeDeliveryProvider;
 
             // Convert given days to seconds
             administrationPeriodDuration = administrationPeriodDuration * 1 days;

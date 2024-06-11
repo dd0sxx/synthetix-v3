@@ -29,7 +29,6 @@ describe('ElectionModule - Initialization', function () {
       [await caller.getAddress()],
       '0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a', // addresses are not important
       '0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a',
-      '0x28D8F1Be96f97C1387e94A53e00eCcFb4E75175a',
       minimumActiveMembers,
       initialNominationPeriodStartDate,
       administrationPeriodDuration,

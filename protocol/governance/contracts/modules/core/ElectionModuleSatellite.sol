@@ -9,7 +9,6 @@ import {InitializableMixin} from "@synthetixio/core-contracts/contracts/initiali
 import {ERC2771Context} from "@synthetixio/core-contracts/contracts/utils/ERC2771Context.sol";
 import {IElectionModule} from "../../interfaces/IElectionModule.sol";
 import {IElectionModuleSatellite} from "../../interfaces/IElectionModuleSatellite.sol";
-import {IDeliveryProvider} from "@synthetixio/core-modules/contracts/interfaces/IDeliveryProvider.sol";
 import {IWormhole} from "@synthetixio/core-modules/contracts/interfaces/IWormhole.sol";
 import {IWormholeRelayer} from "@synthetixio/core-modules/contracts/interfaces/IWormholeRelayer.sol";
 import {ElectionCredentials} from "../../submodules/election/ElectionCredentials.sol";
@@ -43,7 +42,6 @@ contract ElectionModuleSatellite is
         uint64 nominationPeriodStartDate,
         uint64 votingPeriodStartDate,
         uint64 epochEndDate,
-        IDeliveryProvider wormholeDeliveryProvider,
         IWormhole wormholeCore,
         IWormholeRelayer wormholeRelayer,
         address[] calldata councilMembers
@@ -61,7 +59,6 @@ contract ElectionModuleSatellite is
 
         wh.wormholeCore = wormholeCore;
         wh.wormholeRelayer = wormholeRelayer;
-        wh.wormholeDeliveryProvider = wormholeDeliveryProvider;
 
         _setupEpoch(
             epochIndex,

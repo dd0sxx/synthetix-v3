@@ -2,7 +2,6 @@
 pragma solidity >=0.8.11 <0.9.0;
 
 import {AccessError} from "@synthetixio/core-contracts/contracts/errors/AccessError.sol";
-import {IDeliveryProvider} from "./../interfaces/IDeliveryProvider.sol";
 import {IWormhole} from "./../interfaces/IWormhole.sol";
 import {IWormholeRelayer} from "./../interfaces/IWormholeRelayer.sol";
 import {OwnableStorage} from "@synthetixio/core-contracts/contracts/ownership/OwnableStorage.sol";
@@ -33,7 +32,6 @@ library WormholeCrossChain {
 
     struct Data {
         IWormhole wormholeCore;
-        IDeliveryProvider wormholeDeliveryProvider;
         IWormholeRelayer wormholeRelayer;
         SetUtil.UintSet supportedNetworks;
         mapping(uint16 => bytes32) registeredEmitters; //chain id => emitter address (bytes32)
@@ -42,7 +40,6 @@ library WormholeCrossChain {
 
     function configureWormhole(
         IWormhole wormholeCore,
-        IDeliveryProvider wormholeDeliveryProvider,
         IWormholeRelayer wormholeRelayer,
         uint16[] memory supportedNetworks,
         address[] memory emitters
@@ -58,7 +55,6 @@ library WormholeCrossChain {
 
         Data storage wh = load();
         wh.wormholeCore = wormholeCore;
-        wh.wormholeDeliveryProvider = wormholeDeliveryProvider;
         wh.wormholeRelayer = wormholeRelayer;
 
         for (uint256 i = 0; i < supportedNetworks.length; i++) {

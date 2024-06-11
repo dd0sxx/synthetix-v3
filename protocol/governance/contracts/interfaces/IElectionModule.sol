@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import {IElectionModuleSatellite} from "./IElectionModuleSatellite.sol";
-import {IDeliveryProvider} from "@synthetixio/core-modules/contracts/interfaces/IDeliveryProvider.sol";
 import {IWormhole} from "@synthetixio/core-modules/contracts/interfaces/IWormhole.sol";
 import {IWormholeRelayer} from "@synthetixio/core-modules/contracts/interfaces/IWormholeRelayer.sol";
 import {ElectionSettings} from "../storage/ElectionSettings.sol";
@@ -55,7 +54,6 @@ interface IElectionModule is IElectionModuleSatellite {
     /// @notice Initialises the module and immediately starts the first epoch
     function initOrUpdateElectionSettings(
         address[] memory initialCouncil,
-        IDeliveryProvider wormholeDeliveryProvider,
         IWormhole wormholeCore,
         IWormholeRelayer wormholeRelayer,
         uint8 minimumActiveMembers,
