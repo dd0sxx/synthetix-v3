@@ -2,12 +2,8 @@
 pragma solidity >=0.8.11 <0.9.0;
 
 import {IWormhole} from "./../interfaces/IWormhole.sol";
-import {IWormholeRelayer} from "./../interfaces/IWormholeRelayer.sol";
 import {IWormholeReceiver} from "./../interfaces/IWormholeReceiver.sol";
 import "../storage/WormholeCrossChain.sol";
-import "hardhat/console.sol";
-// import "wormhole-solidity-sdk/interfaces/IWormholeRelayerRelayer.sol";
-// import "wormhole-solidity-sdk/interfaces/IWormholeRelayerReceiver.sol";
 
 /**
  * @title Module with assorted cross-chain functions.

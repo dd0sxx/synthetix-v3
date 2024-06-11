@@ -16,7 +16,6 @@ import {Ballot} from "../../storage/Ballot.sol";
 import {CouncilMembers} from "../../storage/CouncilMembers.sol";
 import {Council} from "../../storage/Council.sol";
 import {Epoch} from "../../storage/Epoch.sol";
-import "hardhat/console.sol";
 
 contract ElectionModuleSatellite is
     IElectionModuleSatellite,

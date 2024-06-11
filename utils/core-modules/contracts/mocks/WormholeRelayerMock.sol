@@ -2,7 +2,6 @@
 pragma solidity ^0.8.17;
 import {IWormhole} from "../interfaces/IWormhole.sol";
 import {IWormholeReceiver} from "../interfaces/IWormholeReceiver.sol";
-import "hardhat/console.sol";
 
 contract WormholeRelayerMock {
     event SendEvent(
@@ -72,10 +71,6 @@ contract WormholeRelayerMock {
                 encodedDeliveryVAA,
                 (uint16, uint16, address, address, uint64, bytes, uint256, uint256)
             );
-
-        console.log("emitterAddress: %s", emitterAddress);
-        console.log("emitterChainId: %s", emitterChainId);
-        console.log("sequence: %s", sequence);
 
         IWormholeReceiver targetReceiver = IWormholeReceiver(targetAddress);
 

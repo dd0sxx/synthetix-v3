@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import {IWormhole} from "../interfaces/IWormhole.sol";
-import "hardhat/console.sol";
 
 contract WormholeMock {
     event LogMessagePublished(

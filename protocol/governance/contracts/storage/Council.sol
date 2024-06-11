@@ -6,7 +6,6 @@ import {SafeCastU256} from "@synthetixio/core-contracts/contracts/utils/SafeCast
 import {Epoch} from "./Epoch.sol";
 import {Election} from "./Election.sol";
 import {ElectionSettings} from "./ElectionSettings.sol";
-import "hardhat/console.sol";
 
 library Council {
     using Epoch for Epoch.Data;
@@ -87,7 +86,6 @@ library Council {
         Epoch.ElectionPeriod period2
     ) internal view {
         Epoch.ElectionPeriod currentPeriod = getCurrentEpoch(load()).getCurrentPeriod();
-        console.log("currentPeriod: %s", uint8(currentPeriod));
         if (currentPeriod != period1 && currentPeriod != period2) {
             revert NotCallableInCurrentPeriod();
         }
