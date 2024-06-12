@@ -87,6 +87,81 @@ library SetUtil {
     }
 }
 
+// @custom:artifact @synthetixio/core-modules/contracts/interfaces/IWormhole.sol:IWormhole
+interface IWormhole {
+    struct GuardianSet {
+        address[] keys;
+        uint32 expirationTime;
+    }
+    struct Signature {
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        uint8 guardianIndex;
+    }
+    struct VM {
+        uint8 version;
+        uint32 timestamp;
+        uint32 nonce;
+        uint16 emitterChainId;
+        bytes32 emitterAddress;
+        uint64 sequence;
+        uint8 consistencyLevel;
+        bytes payload;
+        uint32 guardianSetIndex;
+        Signature[] signatures;
+        bytes32 hash;
+    }
+    struct ContractUpgrade {
+        bytes32 module;
+        uint8 action;
+        uint16 chain;
+        address newContract;
+    }
+    struct GuardianSetUpgrade {
+        bytes32 module;
+        uint8 action;
+        uint16 chain;
+        GuardianSet newGuardianSet;
+        uint32 newGuardianSetIndex;
+    }
+    struct SetMessageFee {
+        bytes32 module;
+        uint8 action;
+        uint16 chain;
+        uint256 messageFee;
+    }
+    struct TransferFees {
+        bytes32 module;
+        uint8 action;
+        uint16 chain;
+        uint256 amount;
+        bytes32 recipient;
+    }
+    struct RecoverChainId {
+        bytes32 module;
+        uint8 action;
+        uint256 evmChainId;
+        uint16 newChainId;
+    }
+}
+
+// @custom:artifact @synthetixio/core-modules/contracts/interfaces/IWormholeRelayer.sol:IWormholeRelayerDelivery
+interface IWormholeRelayerDelivery {
+    enum DeliveryStatus {
+        SUCCESS,
+        RECEIVER_FAILURE
+    }
+    enum RefundStatus {
+        REFUND_SENT,
+        REFUND_FAIL,
+        CROSS_CHAIN_REFUND_SENT,
+        CROSS_CHAIN_REFUND_FAIL_PROVIDER_NOT_SUPPORTED,
+        CROSS_CHAIN_REFUND_FAIL_NOT_ENOUGH,
+        NO_REFUND_REQUESTED
+    }
+}
+
 // @custom:artifact @synthetixio/core-modules/contracts/modules/NftModule.sol:NftModule
 contract NftModule {
     bytes32 internal constant _INITIALIZED_NAME = "NftModule";
@@ -110,23 +185,6 @@ library AssociatedSystem {
     }
 }
 
-// @custom:artifact @synthetixio/core-modules/contracts/storage/CrossChain.sol:CrossChain
-library CrossChain {
-    bytes32 private constant _SLOT_CROSS_CHAIN = keccak256(abi.encode("io.synthetix.core-modules.CrossChain"));
-    struct Data {
-        address ccipRouter;
-        SetUtil.UintSet supportedNetworks;
-        mapping(uint64 => uint64) ccipChainIdToSelector;
-        mapping(uint64 => uint64) ccipSelectorToChainId;
-    }
-    function load() internal pure returns (Data storage crossChain) {
-        bytes32 s = _SLOT_CROSS_CHAIN;
-        assembly {
-            crossChain.slot := s
-        }
-    }
-}
-
 // @custom:artifact @synthetixio/core-modules/contracts/storage/Initialized.sol:Initialized
 library Initialized {
     struct Data {
@@ -140,30 +198,21 @@ library Initialized {
     }
 }
 
-// @custom:artifact @synthetixio/core-modules/contracts/utils/CcipClient.sol:CcipClient
-library CcipClient {
-    bytes4 public constant EVM_EXTRA_ARGS_V1_TAG = 0x97a657c9;
-    struct EVMTokenAmount {
-        address token;
-        uint256 amount;
+// @custom:artifact @synthetixio/core-modules/contracts/storage/WormholeCrossChain.sol:WormholeCrossChain
+library WormholeCrossChain {
+    bytes32 private constant _SLOT_WORMHOLE_CROSS_CHAIN = keccak256(abi.encode("io.synthetix.core-modules.WormholeCrossChain"));
+    struct Data {
+        address wormholeCore;
+        address wormholeRelayer;
+        SetUtil.UintSet supportedNetworks;
+        mapping(uint16 => bytes32) registeredEmitters;
+        mapping(bytes32 => bool) hasProcessedMessage;
     }
-    struct Any2EVMMessage {
-        bytes32 messageId;
-        uint64 sourceChainSelector;
-        bytes sender;
-        bytes data;
-        EVMTokenAmount[] tokenAmounts;
-    }
-    struct EVM2AnyMessage {
-        bytes receiver;
-        bytes data;
-        EVMTokenAmount[] tokenAmounts;
-        address feeToken;
-        bytes extraArgs;
-    }
-    struct EVMExtraArgsV1 {
-        uint256 gasLimit;
-        bool strict;
+    function load() internal pure returns (Data storage crossChain) {
+        bytes32 s = _SLOT_WORMHOLE_CROSS_CHAIN;
+        assembly {
+            crossChain.slot := s
+        }
     }
 }
 
