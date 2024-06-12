@@ -32,7 +32,7 @@ artifact = "contracts/modules/core/SnapshotVotePowerModule.sol:SnapshotVotePower
 
 [contract.WormholeMock]
 artifact = "contracts/mocks/WormholeMock.sol:WormholeMock"
-args = ["43113"]
+args = ["10002"]
 
 [contract.WormholeRelayerMock]
 artifact = "contracts/mocks/WormholeRelayerMock.sol:WormholeRelayerMock"

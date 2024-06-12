@@ -24,7 +24,7 @@ export enum ChainSelector {
 export enum WormholeChainSelector {
   mothership = '13370',
   satellite1 = '10005',
-  satellite2 = '1',
+  satellite2 = '43113',
 }
 
 export interface SignerOnChains {
